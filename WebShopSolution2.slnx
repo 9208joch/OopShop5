@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="1.WebShop.Core/1.WebShop.Core.csproj" />
+  <Project Path="2.WebShop.Application/2.WebShop.Application.csproj" />
+  <Project Path="3.WebShop.Infrastructure/3.WebShop.Infrastructure.csproj" />
+  <Project Path="WebShop.ConsoleApp/4.WebShop.ConsoleApp.csproj" />
+</Solution>
