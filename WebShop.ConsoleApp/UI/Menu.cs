@@ -13,6 +13,14 @@ public class Menu
     private int selectedOfferIndex = 0;
     private bool inOffers = true;
 
+    private readonly ConsoleNavigationService _nav;
+
+    public Menu(IProductRepository repo, ConsoleNavigationService nav)
+    {
+        _repo = repo;
+        _nav = nav;
+    }
+
     private string[] options = new[]
     {
         "Home Page",
@@ -22,16 +30,20 @@ public class Menu
         "Quit"
     };
 
-    public Menu(IProductRepository repo)
-    {
-        _repo = repo;
-    }
+
 
     public async Task Start()
     {
         Console.CursorVisible = false;
 
         var offers = await GetOffers();
+
+        if (!offers.Any())
+        {
+            Console.WriteLine("No offers available.");
+            _nav.GetAction();
+            return;
+        }
 
         while (true)
         {
@@ -41,71 +53,73 @@ public class Menu
             DrawOffers(offers);
             DrawMenu();
 
-            var key = Console.ReadKey(true).Key;
+            var action = _nav.GetAction();
 
             if (inOffers)
             {
-                switch (key)
+                switch (action)
                 {
-                    case ConsoleKey.LeftArrow:
+                    case NavigationAction.Left:
                         selectedOfferIndex = (selectedOfferIndex - 1 + offers.Count) % offers.Count;
                         break;
 
-                    case ConsoleKey.RightArrow:
+                    case NavigationAction.Right:
                         selectedOfferIndex = (selectedOfferIndex + 1) % offers.Count;
                         break;
 
-                    case ConsoleKey.DownArrow:
+                    case NavigationAction.Down:
                         inOffers = false;
-                        selectedIndex = 0; // börja högst upp i menyn
+                        selectedIndex = 0;
                         break;
 
-                    case ConsoleKey.Enter:
+                    case NavigationAction.Select:
                         var product = offers[selectedOfferIndex];
 
                         Console.Clear();
                         Console.WriteLine($"Added {product.Name} to cart!");
-                        Console.ReadKey();
+                        Console.WriteLine("Press any key...");
+
+                        _nav.GetAction(); 
                         break;
+
+                    case NavigationAction.Back:
+                        return;
                 }
             }
             else
             {
-                switch (key)
+                switch (action)
                 {
-                    case ConsoleKey.UpArrow:
+                    case NavigationAction.Up:
                         if (selectedIndex == 0)
-                        {
-                            inOffers = true; // gå tillbaka till offers
-                        }
+                            inOffers = true;
                         else
-                        {
                             selectedIndex--;
-                        }
                         break;
 
-                    case ConsoleKey.DownArrow:
+                    case NavigationAction.Down:
                         selectedIndex = (selectedIndex + 1) % options.Length;
                         break;
 
-                    case ConsoleKey.Enter:
+                    case NavigationAction.Select:
                         bool reload = await HandleSelection();
 
                         if (reload)
                         {
                             offers = await GetOffers();
                             inOffers = true;
+                            selectedOfferIndex = 0;
                         }
                         break;
 
-                    case ConsoleKey.LeftArrow:
+                    case NavigationAction.Left:
                         inOffers = true;
                         break;
+
+                    case NavigationAction.Back:
+                        return;
                 }
             }
-
-            if (key == ConsoleKey.Backspace)
-                return;
         }
     }
 
@@ -168,14 +182,14 @@ public class Menu
             // Name
             Console.SetCursorPosition(x, currentY++);
             Console.WriteLine(p.Name.PadRight(innerWidth));
-
+            
             // Description (flera rader)
             foreach (var line in lines)
             {
                 Console.SetCursorPosition(x, currentY++);
                 Console.WriteLine(line.PadRight(innerWidth));
             }
-
+            
             // Price
             Console.SetCursorPosition(x, currentY++);
             Console.ForegroundColor = ConsoleColor.Red;
@@ -186,7 +200,7 @@ public class Menu
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"Sale: {p.SalePrice ?? p.Price} kr".PadRight(innerWidth));
 
-            Console.ResetColor();
+            
 
             // Add to cart
             Console.SetCursorPosition(x, currentY);
@@ -262,7 +276,7 @@ public class Menu
                 Console.WriteLine("Shopping Cart coming soon...");
                 Console.ReadKey();
                 break;
-
+                
             case 3:
                 Console.Clear();
                 Console.WriteLine("Admin coming soon...");

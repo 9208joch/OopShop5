@@ -15,6 +15,7 @@ services.AddDbContext<WebShopContext>(options =>
 
 services.AddScoped<IProductRepository, ProductRepository>();
 services.AddScoped<Menu>();
+services.AddSingleton<ConsoleNavigationService>();
 
 var provider = services.BuildServiceProvider();
 using (var scope = provider.CreateScope())
