@@ -7,6 +7,7 @@ using WebShop.ConsoleApp.UI;
 
 
 var services = new ServiceCollection();
+services.AddScoped<ShopMenu>();
 
 
 services.AddDbContext<WebShopContext>(options =>
