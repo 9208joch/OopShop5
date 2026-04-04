@@ -1,5 +1,7 @@
 ﻿using _1.WebShop.Core.Interfaces;
 using _2.WebShop.Application.Services;
+using _2.WebShop.Application.Services.Payments;
+using _2.WebShop.Application.Services.Shipping;
 using _3.WebShop.Infrastructure.DbContext;
 using _3.WebShop.Infrastructure.Repositories;
 using _4.WebShop.ConsoleApp.Services;
@@ -14,6 +16,15 @@ services.AddDbContext<WebShopContext>(options =>
 services.AddScoped<IProductRepository, ProductRepository>();
 services.AddScoped<CartService>();
 services.AddScoped<MenuService>();
+services.AddScoped<CheckoutService>();
+
+
+services.AddScoped<IPaymentMethod, CardPayment>();
+services.AddScoped<IPaymentMethod, SwishPayment>();
+
+services.AddScoped<IShippingOption, StandardShipping>();
+services.AddScoped<IShippingOption, ExpressShipping>();
+
 
 var provider = services.BuildServiceProvider();
 

@@ -8,7 +8,7 @@ namespace _2.WebShop.Application.Services
     public class CartService
     {
 
-        private readonly ShoppingCart _cart = new();
+        private ShoppingCart _cart = new();
 
         public void AddToCart(Product product, int quantity)
         {
@@ -23,6 +23,11 @@ namespace _2.WebShop.Application.Services
         public ShoppingCart GetCart()
         {
             return _cart;
+        }
+
+        public void ClearCart()
+        {
+            _cart = new ShoppingCart();
         }
 
 
