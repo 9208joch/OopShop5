@@ -2,6 +2,7 @@
 using System.Linq;
 using _1.WebShop.Core.Entities;
 using _1.WebShop.Core.Interfaces;
+using static System.Collections.Specialized.BitVector32;
 
 public class ShopMenu
 {
@@ -28,9 +29,18 @@ public class ShopMenu
     private string? selectedCategory = null;
     private int productScrollOffset = 0;
 
-    private bool saleActive = false;
+    private bool searchActive = false;
+    private bool searchTyping = false;
 
-    private string[] sidebarOptions = { "Sale", "Categories", "Home Page", "Shopping Cart" };
+    private string searchQuery = "";
+    private DateTime lastTypingTime = DateTime.MinValue;
+
+    private List<Product> searchResults = new();
+
+    private bool saleActive = false;
+    private int? selectedSize = null;
+
+    private string[] sidebarOptions = { "Sale", "Categories", "Home Page", "Shopping Cart","Search" };
     private string[] categories = { "Sweater", "Shorts", "T-shirt", "Jeans", "Jacket" };
 
     
@@ -278,7 +288,7 @@ public class ShopMenu
 
         if (!string.IsNullOrWhiteSpace(current))
             lines.Add(current.Trim());
-
+        
         return lines;
     }
 
@@ -291,7 +301,17 @@ public class ShopMenu
         int startX = (Console.WindowWidth - (cardWidth * 3)) / 2;
         int maxHeight = Console.WindowHeight - 2;
 
-        var list = categoryActive ? filteredProducts : products;
+    
+        var list = searchActive
+            ? searchResults
+            : (categoryActive ? filteredProducts : products);
+
+        if (list.Count == 0)
+        {
+            Console.SetCursorPosition(startX, startY);
+            Console.WriteLine("No products found...");
+            return;
+        }
 
         int visibleRows = (Console.WindowHeight - startY) / 4;
         int itemsPerPage = visibleRows * 3;
@@ -311,15 +331,33 @@ public class ShopMenu
 
             bool isSelected = index == selectedProductIndex && inProducts;
 
+            //  highlight hela kortet
             if (isSelected)
                 Console.BackgroundColor = ConsoleColor.DarkGray;
 
+            //  NAME
             Console.SetCursorPosition(x, y);
-            Console.WriteLine(p.Name.PadRight(innerWidth));
+            DrawHighlightedText(p.Name, searchQuery, x, y, innerWidth);
 
+            //  PRICE (sale stöd)
             Console.SetCursorPosition(x, y + 1);
-            Console.WriteLine($"Price: {p.Price} kr".PadRight(innerWidth));
 
+            if (p.IsOnSale)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write($"Old: {p.Price} ");
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"New: {p.SalePrice}".PadRight(innerWidth));
+            }
+            else
+            {
+                Console.WriteLine($"Price: {p.Price} kr".PadRight(innerWidth));
+            }
+
+            Console.ResetColor();
+
+            //  BUTTON
             Console.SetCursorPosition(x, y + 2);
 
             if (isSelected)
@@ -329,6 +367,7 @@ public class ShopMenu
             Console.ResetColor();
         }
 
+        //  SCROLL indikatorer
         bool canScrollDown = productScrollOffset + itemsPerPage < list.Count;
         bool canScrollUp = productScrollOffset > 0;
 
@@ -344,16 +383,213 @@ public class ShopMenu
             Console.Write("[↑ More]");
         }
     }
+    private void DrawHighlightedText(string text, string query, int x, int y, int width)
+    {
+        Console.SetCursorPosition(x, y);
 
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            Console.WriteLine(text.PadRight(width));
+            return;
+        }
+
+        int index = text.IndexOf(query, StringComparison.OrdinalIgnoreCase);
+
+        if (index < 0)
+        {
+            Console.WriteLine(text.PadRight(width));
+            return;
+        }
+
+        // före match
+        Console.Write(text.Substring(0, index));
+
+        //  highlight match
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write(text.Substring(index, query.Length));
+        Console.ResetColor();
+
+        // efter match
+        Console.Write(text.Substring(index + query.Length));
+
+        // fyll resten
+        int remaining = width - text.Length;
+        if (remaining > 0)
+            Console.Write(new string(' ', remaining));
+    }
+    private void DrawSearchBox()
+    {
+        int width = 50;
+        int x = (Console.WindowWidth - width) / 2;
+        int y = 5;
+
+        //  Titel
+        Console.SetCursorPosition(x, y);
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine("Search products:");
+
+        //  Input box
+        Console.SetCursorPosition(x, y + 1);
+        Console.BackgroundColor = ConsoleColor.DarkGray;
+        Console.ForegroundColor = ConsoleColor.White;
+
+        string displayText = searchQuery;
+
+        //  Klipp text om den för lång
+        if (displayText.Length > width)
+            displayText = displayText[^width..];
+
+        Console.Write(displayText.PadRight(width));
+
+        Console.ResetColor();
+
+        //  Sätt cursor i slutet av texten 
+        int cursorPos = Math.Min(displayText.Length, width - 1);
+        Console.SetCursorPosition(x + cursorPos, y + 1);
+
+        //  Visa cursor endast när skriver
+        Console.CursorVisible = searchTyping;
+    }
+    private void DrawSearchResults()
+    {
+        int cardWidth = 30;
+        int innerWidth = 28;
+
+        int startY = 10;
+        int startX = (Console.WindowWidth - (cardWidth * 3)) / 2;
+
+        int maxHeight = Console.WindowHeight - 2;
+
+        int visibleRows = (maxHeight - startY) / 4;
+        int itemsPerPage = visibleRows * 3;
+
+        for (int i = 0; i < itemsPerPage; i++)
+        {
+            int index = i + productScrollOffset;
+            if (index >= searchResults.Count) break;
+
+            var p = searchResults[index];
+
+            int col = i % 3;
+            int row = i / 3;
+
+            int x = startX + col * cardWidth;
+            int y = startY + row * 4;
+
+            Console.SetCursorPosition(x, y);
+            Console.WriteLine(p.Name.PadRight(innerWidth));
+
+            Console.SetCursorPosition(x, y + 1);
+
+            if (p.IsOnSale)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write($"Old: {p.Price} ");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"New: {p.SalePrice}");
+            }
+            else
+            {
+                Console.WriteLine($"Price: {p.Price}");
+            }
+
+            Console.ResetColor();
+
+            Console.SetCursorPosition(x, y + 2);
+            Console.WriteLine("[More info]");
+        }
+    }
+    
+    private async Task HandleSearchInput(NavigationAction action)
+    {
+        
+        //  INPUT 
+      
+        if (searchTyping && Console.KeyAvailable)
+        {
+            var key = Console.ReadKey(true);
+
+            //  ESC  lämna search direkt
+            if (key.Key == ConsoleKey.Escape)
+            {
+                searchActive = false;
+                searchTyping = false;
+
+                searchQuery = "";
+                searchResults.Clear();
+
+                selectedProductIndex = 0;
+                productScrollOffset = 0;
+
+                inSidebar = true;
+                inProducts = false;
+                inOffers = false;
+
+                return;
+            }
+
+            //  BACKSPACE
+            if (key.Key == ConsoleKey.Backspace && searchQuery.Length > 0)
+            {
+                searchQuery = searchQuery[..^1];
+            }
+            //  ENTER  trigga direkt sökning
+            else if (key.Key == ConsoleKey.Enter && searchQuery.Length >= 2)
+            {
+                await ExecuteSearch();
+                return;
+            }
+            //  TEXT INPUT
+            else if (!char.IsControl(key.KeyChar))
+            {
+                searchQuery += key.KeyChar;
+            }
+
+            // reset timer
+            lastTypingTime = DateTime.Now;
+        }
+        
+   
+        //  AUTO SEARCH (1 sek delay)
+        
+        if (searchTyping &&
+            searchQuery.Length >= 2 &&
+            (DateTime.Now - lastTypingTime).TotalSeconds >= 1)
+        {
+            await ExecuteSearch();
+        }
+    }
+    
+    private async Task ExecuteSearch()
+    {
+        var all = await _repo.GetAllAsync();
+
+        searchResults = all
+            .Where(p => p.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+            .GroupBy(p => p.Name)
+            .Select(g => g.First())
+            .ToList();
+
+        //  växla till resultatläge
+        searchTyping = false;
+
+        selectedProductIndex = 0;
+        productScrollOffset = 0;
+
+        inProducts = true;
+        inOffers = false;
+        inSidebar = false;
+    }
 
     private void DrawModal()
     {
         int width = 70;
-        int height = Math.Min(25, 12 + modalVariants.Count); //  dynamisk höjd
+        int height = Math.Min(25, 12 + modalVariants.Count);
 
         int x = (Console.WindowWidth - width) / 2;
         int y = 3;
 
+        //  Bakgrund
         Console.BackgroundColor = ConsoleColor.DarkGray;
 
         for (int i = 0; i < height; i++)
@@ -364,19 +600,31 @@ public class ShopMenu
 
         Console.ResetColor();
 
-        Console.SetCursorPosition(x + 2, y + 1);
-        Console.WriteLine(modalProduct!.Name);
+        //  Helper för att alltid sätta rätt bakgrund
+        void WriteLineInModal(int posX, int posY, string text)
+        {
+            Console.SetCursorPosition(posX, posY);
+            Console.BackgroundColor = ConsoleColor.DarkGray;
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.WriteLine(text.PadRight(width - 4));
+            Console.ResetColor();
+        }
 
-        Console.SetCursorPosition(x + 2, y + 3);
-        Console.WriteLine(modalProduct.Description);
+        //  Titel
+        WriteLineInModal(x + 2, y + 1, modalProduct!.Name);
 
-        Console.SetCursorPosition(x + 2, y + 5);
-        Console.WriteLine($"Price: {modalProduct.Price} kr");
+        //  Beskrivning
+        WriteLineInModal(x + 2, y + 3, modalProduct.Description);
 
-        Console.SetCursorPosition(x + 2, y + 7);
-        Console.WriteLine("Sizes:");
+        //  Pris
+        WriteLineInModal(x + 2, y + 5, $"Price: {modalProduct.Price} kr");
 
-        //  Sizes vänster
+        //  Label
+        WriteLineInModal(x + 2, y + 7, "Sizes:");
+
+     
+        //  SIZES 
+       
         for (int i = 0; i < modalVariants.Count; i++)
         {
             int posY = y + 8 + i;
@@ -386,39 +634,76 @@ public class ShopMenu
 
             Console.SetCursorPosition(x + 4, posY);
 
-            string text = $"{v.Size}".PadRight(10) + $"({v.Inventory})";
+            string text = $"{v.Size,-10} ({v.Inventory,2})";
 
+            //  default
+            Console.BackgroundColor = ConsoleColor.DarkGray;
+            Console.ForegroundColor = ConsoleColor.Black;
+
+            //  out of stock
             if (v.Inventory == 0)
-                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.ForegroundColor = ConsoleColor.Red;
 
+            //  SELECTED (tryckt enter)
+            if (selectedSize == i)
+            {
+                Console.BackgroundColor = ConsoleColor.DarkYellow;
+                Console.ForegroundColor = ConsoleColor.Black;
+            }
+
+            //  HOVER (cursor)
             if (selectedModalButton == 0 && i == selectedSizeIndex)
-                Highlight();
+            {
+                Console.BackgroundColor = ConsoleColor.Gray;
+                Console.ForegroundColor = ConsoleColor.Black;
+            }
 
-            Console.WriteLine(text);
+            Console.WriteLine(text.PadRight(20));
             Console.ResetColor();
         }
 
-        //  Knappar till HÖGER
+    
+        //  KNAPPAR
+        
         int buttonX = x + width - 20;
 
+        // Add to cart
         Console.SetCursorPosition(buttonX, y + 10);
+        Console.BackgroundColor = ConsoleColor.DarkGray;
+        Console.ForegroundColor = ConsoleColor.Black;
+
         if (selectedModalButton == 1)
-            Highlight();
+        {
+            Console.BackgroundColor = ConsoleColor.Gray;
+        }
+
         Console.WriteLine("[Add to cart]");
         Console.ResetColor();
 
+        // Back
         Console.SetCursorPosition(buttonX, y + 12);
+        Console.BackgroundColor = ConsoleColor.DarkGray;
+        Console.ForegroundColor = ConsoleColor.Black;
+
         if (selectedModalButton == 2)
-            Highlight();
+        {
+            Console.BackgroundColor = ConsoleColor.Gray;
+        }
+
         Console.WriteLine("[Back]");
         Console.ResetColor();
 
-        // Error
+        
+        // ERROR
+        
         if (sizeErrorShown && (DateTime.Now - lastErrorTime).TotalSeconds < 2)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
             Console.SetCursorPosition(x + 2, y + height - 2);
-            Console.WriteLine("Please select a size!");
+            Console.BackgroundColor = ConsoleColor.DarkGray;
+            Console.ForegroundColor = ConsoleColor.Red;
+
+            Console.WriteLine("Please select a size!".PadRight(width - 4));
+
             Console.ResetColor();
         }
     }
@@ -433,7 +718,9 @@ public class ShopMenu
 
     private async Task HandleProductsNavigation(NavigationAction action)
     {
-        var list = categoryActive ? filteredProducts : products;
+        var list = searchActive
+            ? searchResults
+            : (categoryActive ? filteredProducts : products);
 
         if (list.Count == 0)
             return;
@@ -457,12 +744,11 @@ public class ShopMenu
 
             case NavigationAction.Up:
 
-                // Gå till Offers om högst upp
+                //  gå upp till offers
                 if (!categoryActive && !saleActive &&
                     selectedProductIndex < cols &&
                     productScrollOffset == 0)
                 {
-                    inProducts = false;
                     inOffers = true;
                     selectedOfferIndex = 0;
                     return;
@@ -471,7 +757,6 @@ public class ShopMenu
                 if (selectedProductIndex - cols >= 0)
                     selectedProductIndex -= cols;
 
-                // Scroll upp
                 if (selectedProductIndex < productScrollOffset)
                     productScrollOffset -= cols;
 
@@ -485,7 +770,6 @@ public class ShopMenu
                 if (selectedProductIndex + cols < list.Count)
                     selectedProductIndex += cols;
 
-                // Samma logik som DrawProducts
                 int startY = categoryActive ? 6 : 20;
                 int visibleRows = (Console.WindowHeight - startY) / 4;
                 int maxVisibleItems = visibleRows * cols;
@@ -497,7 +781,6 @@ public class ShopMenu
 
             case NavigationAction.Select:
 
-                //  Safety check
                 if (selectedProductIndex < 0 || selectedProductIndex >= list.Count)
                     return;
 
@@ -505,17 +788,23 @@ public class ShopMenu
 
                 modalVariants = (await _repo.GetAllAsync())
                     .Where(p => p.Name == modalProduct.Name)
-                    .OrderBy(p => p.Size) 
+                    .OrderBy(p => p.Size)
                     .ToList();
 
                 selectedSizeIndex = 0;
                 selectedModalButton = 0;
                 sizeErrorShown = false;
 
+                selectedSize = null; 
+
                 inModal = true;
                 break;
         }
     }
+
+
+
+
 
 
     private async Task HandleModalNavigation(NavigationAction action)
@@ -524,9 +813,23 @@ public class ShopMenu
         {
             case NavigationAction.Select:
 
+                //  välj storlek (inte knapp)
+                if (selectedModalButton == 0)
+                {
+                    selectedSize = selectedSizeIndex;
+                    return;
+                }
+
+                //  Add to cart
                 if (selectedModalButton == 1)
                 {
-                    var selected = modalVariants[selectedSizeIndex];
+                    if (selectedSize == null)
+                    {
+                        TriggerSizeError();
+                        return;
+                    }
+
+                    var selected = modalVariants[selectedSize.Value];
 
                     if (selected.Inventory == 0)
                     {
@@ -560,6 +863,15 @@ public class ShopMenu
                     selectedSizeIndex++;
                 else if (selectedModalButton < 2)
                     selectedModalButton++;
+                break;
+            case NavigationAction.Right:
+                if (selectedModalButton == 0)
+                    selectedModalButton = 1;
+                break;
+
+            case NavigationAction.Left:
+                if (selectedModalButton > 0)
+                    selectedModalButton = 0;
                 break;
         }
         
@@ -678,7 +990,7 @@ public class ShopMenu
                 
                 if (selectedSidebarIndex == 2)
                 {
-                    // 🔥 reset ALL state
+                    //  reset ALL state
                     saleActive = false;
                     categoryActive = false;
                     categoriesOpen = false;
@@ -701,10 +1013,39 @@ public class ShopMenu
                     _nav.GetAction();
                     return;
                 }
+                //  SEARCH
+                if (selectedSidebarIndex == 4)
+                {
+                    //  Stäng ALLA andra lägen
+                    saleActive = false;
+                    categoryActive = false;
+                    categoriesOpen = false;
 
+                    inModal = false;
+
+                    //  Aktivera search
+                    searchActive = true;
+                    searchTyping = true;
+
+                    //  Reset input & resultat
+                    searchQuery = "";
+                    searchResults.Clear();
+
+                    //  Reset navigation
+                    selectedProductIndex = 0;
+                    productScrollOffset = 0;
+
+                    //  Lämna andra vyer
+                    inSidebar = false;
+                    inOffers = false;
+                    inProducts = false;
+
+                    return;
+                }
+                
                 break;
         }
-    }
+    } 
     private void HandleOffersNavigation(NavigationAction action)
     {
         var list = saleActive ? offers : offers.Take(6).ToList();
@@ -769,7 +1110,7 @@ public class ShopMenu
                     if (selectedOfferIndex >= offerScrollOffset + itemsPerPage)
                         offerScrollOffset += cols;
                 }
-
+                
                 break;
 
             case NavigationAction.Select:
@@ -788,7 +1129,7 @@ public class ShopMenu
         await LoadOffers();
         await LoadProducts();
 
-        // säker start
+        
         inOffers = true;
         inProducts = false;
         inSidebar = false;
@@ -796,21 +1137,48 @@ public class ShopMenu
         categoriesOpen = false;
         categoryActive = false;
         saleActive = false;
+        searchActive = false;
+        searchTyping = false;
 
         bool running = true;
 
         while (running)
         {
+            
+
+            if (searchTyping)
+            {
+                Console.SetCursorPosition(0, 0);
+
+                DrawHeader();
+                DrawSidebar();
+                DrawSearchBox();
+
+             
+                await HandleSearchInput(NavigationAction.None);
+
+                await Task.Delay(16);
+                continue;
+            }
+
+
+            //  NORMAL RENDER
+
             Console.Clear();
 
             DrawHeader();
             DrawSidebar();
 
-            //  RENDER CONTENT
-            
-            if (saleActive)
+            if (searchActive)
             {
-                DrawOffers(); // endast reavaror
+                DrawSearchBox();
+
+                if (!searchTyping)
+                    DrawProducts(); 
+            }
+            else if (saleActive)
+            {
+                DrawOffers();
             }
             else if (!categoryActive)
             {
@@ -822,15 +1190,22 @@ public class ShopMenu
                 DrawProducts();
             }
 
-            // Modal overlay (över allt)
+            //  Modal overlay
             if (inModal)
                 DrawModal();
 
+        
+            // INPUT
+           
             var action = _nav.GetAction();
 
-            
-            //  GLOBAL BACK
-           
+            // search input 
+            if (searchActive)
+                await HandleSearchInput(action);
+
+        
+            // GLOBAL BACK
+       
             if (action == NavigationAction.Back)
             {
                 categoriesOpen = false;
@@ -841,21 +1216,23 @@ public class ShopMenu
                     continue;
                 }
 
-                if (inProducts || inOffers)
+                if (inProducts || inOffers || searchActive)
                 {
                     inSidebar = true;
                     inProducts = false;
                     inOffers = false;
+                    searchActive = false;
                     saleActive = false;
                     continue;
                 }
 
-                //lämna ShopMenu
                 running = false;
                 break;
             }
 
-         
+           
+            //  STATE ROUTING
+           
             if (inModal)
             {
                 await HandleModalNavigation(action);
@@ -864,8 +1241,8 @@ public class ShopMenu
             {
                 await HandleSidebarNavigation(action);
 
-                //  Om sidebar valde Home → lämna direkt
-                if (!inSidebar && !inOffers && !inProducts && !inModal)
+                // HOME → exit
+                if (!inSidebar && !inOffers && !inProducts && !inModal && !searchActive)
                 {
                     running = false;
                     break;
@@ -879,9 +1256,11 @@ public class ShopMenu
             {
                 await HandleProductsNavigation(action);
             }
+
+            // för att int blixtra
+            await Task.Delay(16);
         }
 
-        //rensa UI när lämnar
         Console.Clear();
     }
 
@@ -892,3 +1271,4 @@ public class ShopMenu
         Console.WriteLine(title);
     }
 }
+
