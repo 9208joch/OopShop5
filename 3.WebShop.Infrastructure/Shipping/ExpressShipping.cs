@@ -3,18 +3,19 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace _2.WebShop.Application.Services.Shipping
+namespace _3.WebShop.Infrastructure.Shipping
 {
-    public class StandardShipping : IShippingOption
+    public class ExpressShipping : IShippingOption
     {
         public string Name
         {
-            get { return "Standard"; }
+            get { return "Express"; }
         }
 
         public decimal Price
         {
-            get { return 50m; }
+            get { return 100m; }
         }
+
     }
 }

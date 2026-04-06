@@ -1,9 +1,9 @@
 ﻿using _1.WebShop.Core.Interfaces;
 using _2.WebShop.Application.Services;
-using _2.WebShop.Application.Services.Payments;
-using _2.WebShop.Application.Services.Shipping;
 using _3.WebShop.Infrastructure.DbContext;
+using _3.WebShop.Infrastructure.Payments;
 using _3.WebShop.Infrastructure.Repositories;
+using _3.WebShop.Infrastructure.Shipping;
 using _4.WebShop.ConsoleApp.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
