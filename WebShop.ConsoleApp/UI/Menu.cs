@@ -2,12 +2,14 @@
 using System.Linq;
 using _1.WebShop.Core.Interfaces;
 using _1.WebShop.Core.Entities;
+using _2.WebShop.Application.Services;
 
 namespace WebShop.ConsoleApp.UI;
 
 public class Menu
 {
     private readonly ShopMenu _shop;
+    private readonly IDistanceService _distanceService;
 
     public Menu(IProductRepository repo, ConsoleNavigationService nav, ShopMenu shop)
     {
@@ -23,10 +25,16 @@ public class Menu
 
     private readonly ConsoleNavigationService _nav;
 
-    public Menu(IProductRepository repo, ConsoleNavigationService nav)
+    public Menu(
+    IProductRepository repo,
+    ConsoleNavigationService nav,
+    ShopMenu shop,
+    IDistanceService distanceService)
     {
         _repo = repo;
         _nav = nav;
+        _shop = shop;
+        _distanceService = distanceService;
     }
 
     private string[] options = new[]
@@ -37,7 +45,42 @@ public class Menu
         "Admin",
         "Quit"
     };
+    
+    private async Task DrawStoreInfo()
+    {
+        string address = "Kungsgatan 4 451 30 Uddevalla";
 
+        int center = Console.WindowWidth / 2;
+
+        // Adress
+        Console.SetCursorPosition(center - address.Length / 2, 4);
+        Console.WriteLine(address);
+
+        // Avstånd (test-adress tills vidare)
+        if (_distanceService != null)
+        {
+            try
+            {
+                string customerAddress = "Stockholm"; // placeholder<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+                var distance = await _distanceService.GetDistanceToStoreAsync(customerAddress);
+
+                string text = distance != null
+                    ? $"Distance to store: {Math.Round(distance.Value, 1)} km"
+                    : "Distance unavailable";
+
+                Console.SetCursorPosition(center - text.Length / 2, 5);
+                Console.WriteLine(text);
+            }
+            catch
+            {
+                string error = "Distance unavailable";
+
+                Console.SetCursorPosition(center - error.Length / 2, 5);
+                Console.WriteLine(error);
+            }
+        }
+    }
 
 
     public async Task Start()
@@ -52,14 +95,14 @@ public class Menu
             _nav.GetAction();
             return;
         }
-
+        
         while (true)
         {
             Console.Clear();
 
             DrawHeader();
+            await DrawStoreInfo();
             DrawOffers(offers);
-            DrawMenu();
 
             var action = _nav.GetAction();
 
@@ -265,7 +308,7 @@ public class Menu
             Console.ResetColor();
         }
     }
-
+    
     private async Task<bool> HandleSelection()
     {
         switch (selectedIndex)
@@ -274,7 +317,10 @@ public class Menu
                 return true;
 
             case 1:
-                await _shop.Start();
+                if (_shop != null)
+                {
+                    await _shop.Start();
+                }
                 break;
 
             case 2:
