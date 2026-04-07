@@ -9,6 +9,7 @@ namespace WebShop.ConsoleApp.UI;
 public class Menu
 {
     private readonly ShopMenu _shop;
+    private readonly IDistanceService _distanceService;
 
 
     private readonly ShoppingCartMenu _shoppingCartMenu;   //NK...
@@ -27,11 +28,13 @@ public class Menu
     private bool inOffers = true;
 
     private readonly ConsoleNavigationService _nav;
-
-    public Menu(IProductRepository repo, ConsoleNavigationService nav)
+    
+    public Menu(IProductRepository repo, ConsoleNavigationService nav, ShopMenu shop, IDistanceService distanceService)
     {
         _repo = repo;
         _nav = nav;
+        _shop = shop;
+        _distanceService = distanceService;
     }
 
     private string[] options = new[]
@@ -42,7 +45,42 @@ public class Menu
         "Admin",
         "Quit"
     };
+    
+    private async Task DrawStoreInfo()
+    {
+        string address = "Kungsgatan 4 451 30 Uddevalla";
 
+        int center = Console.WindowWidth / 2;
+
+        // Adress
+        Console.SetCursorPosition(center - address.Length / 2, 4);
+        Console.WriteLine(address);
+
+        // Avstånd (test-adress tills vidare)
+        if (_distanceService != null)
+        {
+            try
+            {
+                string customerAddress = "Stockholm"; // placeholder<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+                var distance = await _distanceService.GetDistanceToStoreAsync(customerAddress);
+
+                string text = distance != null
+                    ? $"Distance to store: {Math.Round(distance.Value, 1)} km"
+                    : "Distance unavailable";
+
+                Console.SetCursorPosition(center - text.Length / 2, 5);
+                Console.WriteLine(text);
+            }
+            catch
+            {
+                string error = "Distance unavailable";
+
+                Console.SetCursorPosition(center - error.Length / 2, 5);
+                Console.WriteLine(error);
+            }
+        }
+    }
 
 
     public async Task Start()
@@ -57,12 +95,13 @@ public class Menu
             _nav.GetAction();
             return;
         }
-
+        
         while (true)
         {
             Console.Clear();
 
             DrawHeader();
+            await DrawStoreInfo();
             DrawOffers(offers);
             DrawMenu();
 
@@ -168,8 +207,8 @@ public class Menu
 
         int totalWidth = cardWidth * offers.Count;
         int startX = (Console.WindowWidth - totalWidth) / 2;
-        int startY = 6;
-
+        int startY = 8;
+        
         string title = "=== Great Offers ===";
         int center = Console.WindowWidth / 2;
 
@@ -253,8 +292,8 @@ public class Menu
     }
     private void DrawMenu()
     {
-        int startY = 12;
-        int startX = 5;
+        int startY = 15;
+        int startX = 15;
 
         for (int i = 0; i < options.Length; i++)
         {
@@ -270,7 +309,7 @@ public class Menu
             Console.ResetColor();
         }
     }
-
+    
     private async Task<bool> HandleSelection()
     {
         switch (selectedIndex)

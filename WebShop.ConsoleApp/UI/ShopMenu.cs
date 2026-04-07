@@ -502,9 +502,9 @@ public class ShopMenu
     
     private async Task HandleSearchInput(NavigationAction action)
     {
-        
+
         //  INPUT 
-      
+        
         if (searchTyping && Console.KeyAvailable)
         {
             var key = Console.ReadKey(true);
@@ -527,7 +527,7 @@ public class ShopMenu
 
                 return;
             }
-
+            
             //  BACKSPACE
             if (key.Key == ConsoleKey.Backspace && searchQuery.Length > 0)
             {
@@ -1260,7 +1260,7 @@ public class ShopMenu
             // för att int blixtra
             await Task.Delay(16);
         }
-
+        
         Console.Clear();
     }
 
