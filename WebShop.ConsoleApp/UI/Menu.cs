@@ -2,7 +2,9 @@
 using System.Linq;
 using _1.WebShop.Core.Interfaces;
 using _1.WebShop.Core.Entities;
-using _2.WebShop.Application.Services;
+using _1.WebShop.Application;         
+using _1.WebShop.Application.Services;
+
 
 namespace WebShop.ConsoleApp.UI;
 
@@ -25,11 +27,7 @@ public class Menu
 
     private readonly ConsoleNavigationService _nav;
 
-    public Menu(
-    IProductRepository repo,
-    ConsoleNavigationService nav,
-    ShopMenu shop,
-    IDistanceService distanceService)
+    public Menu(IProductRepository repo, ConsoleNavigationService nav, ShopMenu shop, IDistanceService distanceService)
     {
         _repo = repo;
         _nav = nav;
@@ -61,7 +59,7 @@ public class Menu
         {
             try
             {
-                string customerAddress = "Stockholm"; // placeholder<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                string customerAddress = "Stockholm"; // placeholder<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
                 var distance = await _distanceService.GetDistanceToStoreAsync(customerAddress);
 
