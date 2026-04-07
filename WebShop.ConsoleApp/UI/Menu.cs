@@ -2,9 +2,7 @@
 using System.Linq;
 using _1.WebShop.Core.Interfaces;
 using _1.WebShop.Core.Entities;
-using _1.WebShop.Application;         
-using _1.WebShop.Application.Services;
-
+using UI;
 
 namespace WebShop.ConsoleApp.UI;
 
@@ -13,11 +11,15 @@ public class Menu
     private readonly ShopMenu _shop;
     private readonly IDistanceService _distanceService;
 
-    public Menu(IProductRepository repo, ConsoleNavigationService nav, ShopMenu shop)
+
+    private readonly ShoppingCartMenu _shoppingCartMenu;   //NK...
+
+    public Menu(IProductRepository repo, ConsoleNavigationService nav, ShopMenu shop, ShoppingCartMenu shoppingCartMenu)   //NK...ShoppingCartMenu shoppingCartMenu
     {
         _repo = repo;
         _nav = nav;
         _shop = shop;
+        _shoppingCartMenu = shoppingCartMenu;   //NK...
     }
     private readonly IProductRepository _repo;
 
@@ -324,8 +326,11 @@ public class Menu
 
             case 2:
                 Console.Clear();
-                Console.WriteLine("Shopping Cart coming soon...");
-                Console.ReadKey();
+                if (_shoppingCartMenu !=null)
+                {
+
+                    await _shoppingCartMenu.Start();   //NK...
+                }
                 break;
                 
             case 3:
