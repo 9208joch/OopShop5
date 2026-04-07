@@ -1,0 +1,84 @@
+längst upp
+using _1.WebShop.Core.Interfaces;
+using WebShop.ConsoleApp.Services;
+
+
+i eran klassen 
+private readonly ConsoleNavigationService _nav;
+
+public !!Namnet på er class här!!(ConsoleNavigationService nav)
+{
+    _nav = nav;
+}
+
+val av vad som är markerat från start
+private int selectedIndex = 0;
+
+exempel på markering av där man är 
+
+public void Draw() <-- eller vad motsvarande ni använt
+{
+    for (int i = 0; i < items.Count; i++)
+    {
+        if (i == selectedIndex)
+        {
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.ForegroundColor = ConsoleColor.Black;
+        }
+
+        Console.ResetColor();
+    }
+}
+
+navigationsloop som ni får fylla med övriga funktioner som är relevanta för er
+
+
+public void Start()
+{
+    while (true)
+    {
+        Console.Clear();
+        Draw();
+
+        var action = _nav.GetAction();
+
+        switch (action)
+        {
+            case NavigationAction.Up:
+                MoveUp();
+                break;
+
+            case NavigationAction.Down:
+                MoveDown();
+                break;
+
+            case NavigationAction.Select:
+                Select();
+                break;
+
+            case NavigationAction.Back:
+                return; 
+        }
+    }
+}
+
+
+
+exempel på hur man anropar en annan meny
+case NavigationAction.Select:
+    _!!Menyns Namn!!.Start();
+    break;
+
+i Program.cs eller om ni ger mig era namn på classer så behöver vi inte vara flera kockar i samma soppa
+services.AddScoped<!!Namnet på er class här!!>();
+
+
+och sist
+använt INTE 
+Console.ReadKey()
+switch(Console.ReadKey().Key)
+
+utan använt 
+var action = _nav.GetAction();
+
+

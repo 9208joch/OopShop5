@@ -7,8 +7,10 @@ using _3.WebShop.Infrastructure.Shipping;
 using _4.WebShop.ConsoleApp.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using WebShop.ConsoleApp.UI;
 
 var services = new ServiceCollection();
+services.AddScoped<ShopMenu>();
 
 services.AddDbContext<WebShopContext>(options =>
     options.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=WebShopDb;Trusted_Connection=True;"));
@@ -28,6 +30,10 @@ services.AddScoped<IShippingOption, ExpressShipping>();
 
 var provider = services.BuildServiceProvider();
 
+services.AddScoped<Menu>();
+services.AddSingleton<ConsoleNavigationService>();
+
+var provider = services.BuildServiceProvider();
 using (var scope = provider.CreateScope())
 {
     var repo = scope.ServiceProvider.GetRequiredService<IProductRepository>();
@@ -40,4 +46,7 @@ using (var scope = provider.CreateScope())
     var menu = scope.ServiceProvider.GetRequiredService<MenuService>();
 
     await menu.RunAsync();
+}
+    var menu = scope.ServiceProvider.GetRequiredService<Menu>();
+    await menu.Start();
 }
