@@ -19,7 +19,7 @@ services.AddDbContext<WebShopContext>(options =>
     options.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=WebShopDb;Trusted_Connection=True;"));
 
 services.AddScoped<IProductRepository, ProductRepository>();
-services.AddScoped<CartService>();
+services.AddSingleton<CartService>();
 services.AddScoped<ShoppingCartMenu>();
 services.AddScoped<CheckoutService>();
 
@@ -36,7 +36,7 @@ services.AddScoped<Menu>();
 services.AddSingleton<ConsoleNavigationService>();
 
 
-services.AddHttpClient<IDistanceService, DistanceService>();
+    services.AddHttpClient<IDistanceService, DistanceService>();
 
 var provider = services.BuildServiceProvider();
 
