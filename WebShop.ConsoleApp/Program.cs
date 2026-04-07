@@ -52,13 +52,3 @@ using (var scope = provider.CreateScope())
     var menu = scope.ServiceProvider.GetRequiredService<Menu>();
     await menu.Start();
 }
-   // var menu = scope.ServiceProvider.GetRequiredService<MenuService>();
-
-   // await menu.RunAsync();
-}
-    var menu = provider.GetRequiredService<Menu>();
-    await menu.Start();
-
-
-
-
