@@ -7,6 +7,14 @@ namespace WebShop.ConsoleApp.UI;
 
 public class Menu
 {
+    private readonly ShopMenu _shop;
+
+    public Menu(IProductRepository repo, ConsoleNavigationService nav, ShopMenu shop)
+    {
+        _repo = repo;
+        _nav = nav;
+        _shop = shop;
+    }
     private readonly IProductRepository _repo;
 
     private int selectedIndex = 0;
@@ -266,9 +274,7 @@ public class Menu
                 return true;
 
             case 1:
-                Console.Clear();
-                Console.WriteLine("Browse Products coming soon...");
-                Console.ReadKey();
+                await _shop.Start();
                 break;
 
             case 2:
