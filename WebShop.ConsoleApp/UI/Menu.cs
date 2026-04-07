@@ -26,7 +26,7 @@ public class Menu
     private bool inOffers = true;
 
     private readonly ConsoleNavigationService _nav;
-
+    
     public Menu(IProductRepository repo, ConsoleNavigationService nav, ShopMenu shop, IDistanceService distanceService)
     {
         _repo = repo;
@@ -101,6 +101,7 @@ public class Menu
             DrawHeader();
             await DrawStoreInfo();
             DrawOffers(offers);
+            DrawMenu();
 
             var action = _nav.GetAction();
 
@@ -204,8 +205,8 @@ public class Menu
 
         int totalWidth = cardWidth * offers.Count;
         int startX = (Console.WindowWidth - totalWidth) / 2;
-        int startY = 6;
-
+        int startY = 8;
+        
         string title = "=== Great Offers ===";
         int center = Console.WindowWidth / 2;
 
@@ -289,8 +290,8 @@ public class Menu
     }
     private void DrawMenu()
     {
-        int startY = 12;
-        int startX = 5;
+        int startY = 15;
+        int startX = 15;
 
         for (int i = 0; i < options.Length; i++)
         {
