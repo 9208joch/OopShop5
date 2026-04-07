@@ -11,8 +11,4 @@
     <ProjectReference Include="..\1.WebShop.Core\1.WebShop.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Services\" />
-  </ItemGroup>
-
 </Project>
