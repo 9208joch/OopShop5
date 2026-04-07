@@ -7,9 +7,9 @@ using System.ComponentModel.Design;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace _4.WebShop.ConsoleApp.Services
+namespace UI
 {
-    public class MenuService
+    public class ShoppingCartMenu
     {
         private readonly CartService _cartService;
         private readonly IProductRepository _productRepository;
@@ -19,7 +19,7 @@ namespace _4.WebShop.ConsoleApp.Services
 
         private readonly CheckoutService _checkoutService;
 
-        public MenuService(CartService cartService, IProductRepository productRepository,
+        public ShoppingCartMenu(CartService cartService, IProductRepository productRepository,
             IEnumerable<IPaymentMethod> paymentMethods,
             IEnumerable<IShippingOption> shippingOptions, CheckoutService checkoutService)
         {
@@ -30,7 +30,7 @@ namespace _4.WebShop.ConsoleApp.Services
             _checkoutService = checkoutService;
         }
 
-        public async Task RunAsync()
+        public async Task Start()
         {
             var products = await _productRepository.GetAllAsync();
 

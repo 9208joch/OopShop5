@@ -4,9 +4,9 @@ using _3.WebShop.Infrastructure.DbContext;
 using _3.WebShop.Infrastructure.Payments;
 using _3.WebShop.Infrastructure.Repositories;
 using _3.WebShop.Infrastructure.Shipping;
-using _4.WebShop.ConsoleApp.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using UI;
 using WebShop.ConsoleApp.UI;
 
 var services = new ServiceCollection();
@@ -17,7 +17,7 @@ services.AddDbContext<WebShopContext>(options =>
 
 services.AddScoped<IProductRepository, ProductRepository>();
 services.AddScoped<CartService>();
-services.AddScoped<MenuService>();
+services.AddScoped<ShoppingCartMenu>();
 services.AddScoped<CheckoutService>();
 
 
@@ -28,7 +28,7 @@ services.AddScoped<IShippingOption, StandardShipping>();
 services.AddScoped<IShippingOption, ExpressShipping>();
 
 
-var provider = services.BuildServiceProvider();
+//var provider = services.BuildServiceProvider();
 
 services.AddScoped<Menu>();
 services.AddSingleton<ConsoleNavigationService>();
@@ -43,10 +43,13 @@ using (var scope = provider.CreateScope())
         await concreteRepo.SeedAsync();
     }
 
-    var menu = scope.ServiceProvider.GetRequiredService<MenuService>();
+   // var menu = scope.ServiceProvider.GetRequiredService<MenuService>();
 
-    await menu.RunAsync();
+   // await menu.RunAsync();
 }
-    var menu = scope.ServiceProvider.GetRequiredService<Menu>();
+    var menu = provider.GetRequiredService<Menu>();
     await menu.Start();
-}
+
+
+
+
