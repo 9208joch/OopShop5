@@ -279,16 +279,19 @@ public class Menu
                 return true;
 
             case 1:
-                await _shop.Start();
+                if (_shop != null)
+                {
+                    await _shop.Start();
+                }
                 break;
 
             case 2:
                 Console.Clear();
-                Console.WriteLine("Shopping Cart coming soon...");
-                
+                if (_shoppingCartMenu !=null)
+                {
 
-               await _shoppingCartMenu.Start();   //NK...
-                Console.ReadKey();
+                    await _shoppingCartMenu.Start();   //NK...
+                }
                 break;
                 
             case 3:
