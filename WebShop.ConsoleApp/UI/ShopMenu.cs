@@ -3,66 +3,27 @@ using System.Linq;
 using _1.WebShop.Core.Entities;
 using _1.WebShop.Core.Interfaces;
 using _2.WebShop.Application.Services;
-using WebShop.ConsoleApp;
 using UI;
+using WebShop.ConsoleApp;
+using WebShop.ConsoleApp.UI.State;
 using static System.Collections.Specialized.BitVector32;
 
 public class ShopMenu
 {
+    private readonly ShopState _state = new();
     private readonly IProductRepository _repo;
     private readonly ConsoleNavigationService _nav;
-
-    private List<Product> offers = new();
-    private List<Product> products = new();
-    private List<Product> filteredProducts = new();
-
-    private int selectedOfferIndex = 0;
-    private int selectedProductIndex = 0;
-
-    private bool inOffers = true;
-    private bool inProducts = false;
-    private bool inSidebar = false;
-
-    private bool categoriesOpen = false;
-    private bool categoryActive = false;
-
-    private int selectedSidebarIndex = 0;
-    private int selectedCategoryIndex = 0;
-
-    private string? selectedCategory = null;
-    private int productScrollOffset = 0;
-
-    private bool searchActive = false;
-    private bool searchTyping = false;
-
-    private string searchQuery = "";
     private DateTime lastTypingTime = DateTime.MinValue;
-
+    private List<Product> modalVariants = new();
     private List<Product> searchResults = new();
-
-    private bool saleActive = false;
-    private int? selectedSize = null;
 
     private string[] sidebarOptions = { "Sale", "Categories", "Home Page", "Shopping Cart","Search" };
     private string[] categories = { "Sweater", "Shorts", "T-shirt", "Jeans", "Jacket" };
 
-    
-    private bool inModal = false;
-    private Product? modalProduct = null;
-    private List<Product> modalVariants = new();
-
-    private int selectedSizeIndex = 0;
-    private int selectedModalButton = 0;
-
     private bool sizeErrorShown = false;
     private DateTime lastErrorTime = DateTime.MinValue;
-
-    private int offerScrollOffset = 0;
     private readonly ShoppingCartMenu _shoppingCartMenu;
     private readonly CartService _cartService;
-
-
-
 
     public ShopMenu(
     IProductRepository repo,
@@ -76,11 +37,11 @@ public class ShopMenu
         _shoppingCartMenu = shoppingCartMenu;
     }
 
-    
 
+ 
     private async Task LoadOffers()
     {
-        offers = (await _repo.GetAllAsync())
+        _state.Offers = (await _repo.GetAllAsync())
             .Where(p => p.IsOnSale && p.Inventory > 0)
             .GroupBy(p => p.Name)
             .Select(g => g.First())
@@ -88,13 +49,13 @@ public class ShopMenu
             //.Take(6) <-- test
             .ToList();
 
-        selectedOfferIndex = 0;
+        _state.SelectedOfferIndex = 0;
     }
     private async Task LoadProducts()
     {
         var rnd = new Random();
 
-        products = (await _repo.GetAllAsync())
+        _state.Products = (await _repo.GetAllAsync())
             .Where(p => !p.IsOnSale)
             .GroupBy(p => p.Name)
             .Select(g => g.First())
@@ -102,20 +63,20 @@ public class ShopMenu
             .Take(36)
             .ToList();
 
-        selectedProductIndex = 0;
+        _state.SelectedProductIndex = 0;
     }
 
     private async Task LoadCategoryProducts(string category)
     {
         var all = await _repo.GetAllAsync();
 
-        filteredProducts = all
+        _state.FilteredProducts = all
             .Where(p => p.Category == category)
             .GroupBy(p => p.Name)
             .Select(g => g.First())
             .ToList();
 
-        selectedProductIndex = 0;
+        _state.SelectedProductIndex = 0;
     }
     
     private void DrawSidebar()
@@ -127,7 +88,7 @@ public class ShopMenu
         {
             Console.SetCursorPosition(x, y);
 
-            bool selected = inSidebar && i == selectedSidebarIndex;
+            bool selected = _state.InSidebar && i == _state.SelectedSidebarIndex;
 
             //  Highlight för vald rad
             if (selected)
@@ -151,7 +112,7 @@ public class ShopMenu
             //  CATEGORIES med pil
             else if (i == 1)
             {
-                string arrow = categoriesOpen ? "▲" : "▼";
+                string arrow = _state.CategoriesOpen ? "▲" : "▼";
                 Console.WriteLine($"Categories {arrow}");
             }
             //  Övriga
@@ -166,16 +127,16 @@ public class ShopMenu
   
             // CATEGORY DROPDOWN
            
-            if (i == 1 && categoriesOpen)
+            if (i == 1 && _state.CategoriesOpen)
             {
                 for (int j = 0; j < categories.Length; j++)
                 {
                     Console.SetCursorPosition(x + 2, y);
 
                     bool catSelected =
-                        inSidebar &&
-                        selectedSidebarIndex == 1 &&
-                        selectedCategoryIndex == j;
+                        _state.InSidebar &&
+                        _state.SelectedSidebarIndex == 1 &&
+                        _state.SelectedCategoryIndex == j;
 
                     if (catSelected)
                     {
@@ -204,18 +165,18 @@ public class ShopMenu
         int startX = (Console.WindowWidth - (cardWidth * 3)) / 2;
         int startY = 6;
 
-        string title = saleActive ? "=== Sale ===" : "=== Great Offers ===";
+        string title = _state.SaleActive ? "=== Sale ===" : "=== Great _state.Offers ===";
         Console.SetCursorPosition((Console.WindowWidth - title.Length) / 2, startY - 2);
         Console.WriteLine(title);
 
-        var list = saleActive ? offers : offers.Take(6).ToList();
+        var list = _state.SaleActive ? _state.Offers : _state.Offers.Take(6).ToList();
 
         int visibleRows = (Console.WindowHeight - startY) / 7;
         int itemsPerPage = visibleRows * 3;
 
         for (int i = 0; i < itemsPerPage; i++)
         {
-            int index = i + offerScrollOffset;
+            int index = i + _state.OfferScrollOffset;
             if (index >= list.Count) break;
 
             var p = list[index];
@@ -226,7 +187,7 @@ public class ShopMenu
             int x = startX + col * cardWidth;
             int y = startY + row * 7;
 
-            bool isSelected = index == selectedOfferIndex && inOffers;
+            bool isSelected = index == _state.SelectedOfferIndex && _state.InOffers;
 
             if (isSelected)
                 Console.BackgroundColor = ConsoleColor.DarkGray;
@@ -265,16 +226,16 @@ public class ShopMenu
         }
 
         //  Scroll indicators
-        bool canScrollDown = offerScrollOffset + itemsPerPage < list.Count;
-        bool canScrollUp = offerScrollOffset > 0;
+        bool canScrollDown = _state.OfferScrollOffset + itemsPerPage < list.Count;
+        bool canScrollUp = _state.OfferScrollOffset > 0;
 
-        if (saleActive && canScrollDown)
+        if (_state.SaleActive && canScrollDown)
         {
             Console.SetCursorPosition(Console.WindowWidth - 10, Console.WindowHeight - 1);
             Console.Write("[More ↓]");
         }
 
-        if (saleActive && canScrollUp)
+        if (_state.SaleActive && canScrollUp)
         {
             Console.SetCursorPosition(Console.WindowWidth - 10, startY - 1);
             Console.Write("[↑ More]");
@@ -308,19 +269,19 @@ public class ShopMenu
         int cardWidth = 30;
         int innerWidth = 28;
 
-        int startY = categoryActive ? 6 : 20;
+        int startY = _state.CategoryActive ? 6 : 20;
         int startX = (Console.WindowWidth - (cardWidth * 3)) / 2;
         int maxHeight = Console.WindowHeight - 2;
 
     
-        var list = searchActive
+        var list = _state.SearchActive
             ? searchResults
-            : (categoryActive ? filteredProducts : products);
+            : (_state.CategoryActive ? _state.FilteredProducts : _state.Products);
 
         if (list.Count == 0)
         {
             Console.SetCursorPosition(startX, startY);
-            Console.WriteLine("No products found...");
+            Console.WriteLine("No _state.InProducts found...");
             return;
         }
 
@@ -329,7 +290,7 @@ public class ShopMenu
 
         for (int i = 0; i < itemsPerPage; i++)
         {
-            int index = i + productScrollOffset;
+            int index = i + _state.ProductScrollOffset;
             if (index >= list.Count) break;
 
             var p = list[index];
@@ -340,7 +301,7 @@ public class ShopMenu
             int x = startX + col * cardWidth;
             int y = startY + row * 4;
 
-            bool isSelected = index == selectedProductIndex && inProducts;
+            bool isSelected = index == _state.SelectedProductIndex && _state.InProducts;
 
             //  highlight hela kortet
             if (isSelected)
@@ -348,7 +309,7 @@ public class ShopMenu
 
             //  NAME
             Console.SetCursorPosition(x, y);
-            DrawHighlightedText(p.Name, searchQuery, x, y, innerWidth);
+            DrawHighlightedText(p.Name, _state.SearchQuery, x, y, innerWidth);
 
             //  PRICE (sale stöd)
             Console.SetCursorPosition(x, y + 1);
@@ -379,8 +340,8 @@ public class ShopMenu
         }
 
         //  SCROLL indikatorer
-        bool canScrollDown = productScrollOffset + itemsPerPage < list.Count;
-        bool canScrollUp = productScrollOffset > 0;
+        bool canScrollDown = _state.ProductScrollOffset + itemsPerPage < list.Count;
+        bool canScrollUp = _state.ProductScrollOffset > 0;
 
         if (canScrollDown)
         {
@@ -437,14 +398,14 @@ public class ShopMenu
         //  Titel
         Console.SetCursorPosition(x, y);
         Console.ForegroundColor = ConsoleColor.White;
-        Console.WriteLine("Search products:");
+        Console.WriteLine("Search _state.InProducts:");
 
         //  Input box
         Console.SetCursorPosition(x, y + 1);
         Console.BackgroundColor = ConsoleColor.DarkGray;
         Console.ForegroundColor = ConsoleColor.White;
 
-        string displayText = searchQuery;
+        string displayText = _state.SearchQuery;
 
         //  Klipp text om den för lång
         if (displayText.Length > width)
@@ -459,7 +420,7 @@ public class ShopMenu
         Console.SetCursorPosition(x + cursorPos, y + 1);
 
         //  Visa cursor endast när skriver
-        Console.CursorVisible = searchTyping;
+        Console.CursorVisible = _state.SearchTyping;
     }
     private void DrawSearchResults()
     {
@@ -476,7 +437,7 @@ public class ShopMenu
 
         for (int i = 0; i < itemsPerPage; i++)
         {
-            int index = i + productScrollOffset;
+            int index = i + _state.ProductScrollOffset;
             if (index >= searchResults.Count) break;
 
             var p = searchResults[index];
@@ -516,36 +477,36 @@ public class ShopMenu
 
         //  INPUT 
         
-        if (searchTyping && Console.KeyAvailable)
+        if (_state.SearchTyping && Console.KeyAvailable)
         {
             var key = Console.ReadKey(true);
 
             //  ESC  lämna search direkt
             if (key.Key == ConsoleKey.Escape)
             {
-                searchActive = false;
-                searchTyping = false;
+                _state.SearchActive = false;
+                _state.SearchTyping = false;
 
-                searchQuery = "";
+                _state.SearchQuery = "";
                 searchResults.Clear();
 
-                selectedProductIndex = 0;
-                productScrollOffset = 0;
+                _state.SelectedProductIndex = 0;
+                _state.ProductScrollOffset = 0;
 
-                inSidebar = true;
-                inProducts = false;
-                inOffers = false;
+                _state.InSidebar = true;
+                _state.InProducts = false;
+                _state.InOffers = false;
 
                 return;
             }
             
             //  BACKSPACE
-            if (key.Key == ConsoleKey.Backspace && searchQuery.Length > 0)
+            if (key.Key == ConsoleKey.Backspace && _state.SearchQuery.Length > 0)
             {
-                searchQuery = searchQuery[..^1];
+                _state.SearchQuery = _state.SearchQuery[..^1];
             }
             //  ENTER  trigga direkt sökning
-            else if (key.Key == ConsoleKey.Enter && searchQuery.Length >= 2)
+            else if (key.Key == ConsoleKey.Enter && _state.SearchQuery.Length >= 2)
             {
                 await ExecuteSearch();
                 return;
@@ -553,7 +514,7 @@ public class ShopMenu
             //  TEXT INPUT
             else if (!char.IsControl(key.KeyChar))
             {
-                searchQuery += key.KeyChar;
+                _state.SearchQuery += key.KeyChar;
             }
 
             // reset timer
@@ -563,8 +524,8 @@ public class ShopMenu
    
         //  AUTO SEARCH (1 sek delay)
         
-        if (searchTyping &&
-            searchQuery.Length >= 2 &&
+        if (_state.SearchTyping &&
+            _state.SearchQuery.Length >= 2 &&
             (DateTime.Now - lastTypingTime).TotalSeconds >= 1)
         {
             await ExecuteSearch();
@@ -576,20 +537,20 @@ public class ShopMenu
         var all = await _repo.GetAllAsync();
 
         searchResults = all
-            .Where(p => p.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+            .Where(p => p.Name.Contains(_state.SearchQuery, StringComparison.OrdinalIgnoreCase))
             .GroupBy(p => p.Name)
             .Select(g => g.First())
             .ToList();
 
         //  växla till resultatläge
-        searchTyping = false;
+        _state.SearchTyping = false;
 
-        selectedProductIndex = 0;
-        productScrollOffset = 0;
+        _state.SelectedProductIndex = 0;
+        _state.ProductScrollOffset = 0;
 
-        inProducts = true;
-        inOffers = false;
-        inSidebar = false;
+        _state.InProducts = true;
+        _state.InOffers = false;
+        _state.InSidebar = false;
     }
 
     private void DrawModal()
@@ -622,13 +583,13 @@ public class ShopMenu
         }
 
         //  Titel
-        WriteLineInModal(x + 2, y + 1, modalProduct!.Name);
+        WriteLineInModal(x + 2, y + 1, _state.ModalProduct!.Name);
 
         //  Beskrivning
-        WriteLineInModal(x + 2, y + 3, modalProduct.Description);
+        WriteLineInModal(x + 2, y + 3, _state.ModalProduct.Description);
 
         //  Pris
-        WriteLineInModal(x + 2, y + 5, $"Price: {modalProduct.Price} kr");
+        WriteLineInModal(x + 2, y + 5, $"Price: {_state.ModalProduct.Price} kr");
 
         //  Label
         WriteLineInModal(x + 2, y + 7, "Sizes:");
@@ -656,14 +617,14 @@ public class ShopMenu
                 Console.ForegroundColor = ConsoleColor.Red;
 
             //  SELECTED (tryckt enter)
-            if (selectedSize == i)
+            if (_state.SelectedSize == i)
             {
                 Console.BackgroundColor = ConsoleColor.DarkYellow;
                 Console.ForegroundColor = ConsoleColor.Black;
             }
 
             //  HOVER (cursor)
-            if (selectedModalButton == 0 && i == selectedSizeIndex)
+            if (_state.SelectedModalButton == 0 && i == _state.SelectedSizeIndex)
             {
                 Console.BackgroundColor = ConsoleColor.Gray;
                 Console.ForegroundColor = ConsoleColor.Black;
@@ -684,7 +645,7 @@ public class ShopMenu
         Console.ForegroundColor = ConsoleColor.Black;
 
 
-        if (selectedModalButton == 1)
+        if (_state.SelectedModalButton == 1)
         {
             Console.BackgroundColor = ConsoleColor.Gray;
         }
@@ -697,7 +658,7 @@ public class ShopMenu
         Console.BackgroundColor = ConsoleColor.DarkGray;
         Console.ForegroundColor = ConsoleColor.Black;
 
-        if (selectedModalButton == 2)
+        if (_state.SelectedModalButton == 2)
         {
             Console.BackgroundColor = ConsoleColor.Gray;
         }
@@ -730,9 +691,9 @@ public class ShopMenu
 
     private async Task HandleProductsNavigation(NavigationAction action)
     {
-        var list = searchActive
+        var list = _state.SearchActive
             ? searchResults
-            : (categoryActive ? filteredProducts : products);
+            : (_state.CategoryActive ? _state.FilteredProducts : _state.Products);
 
         if (list.Count == 0)
             return;
@@ -742,74 +703,73 @@ public class ShopMenu
         switch (action)
         {
             case NavigationAction.Left:
-                inSidebar = true;
-                inProducts = false;
+                _state.InSidebar = true;
+                _state.InProducts = false;
                 break;
-
+                
             case NavigationAction.Right:
-                if (selectedProductIndex % cols < cols - 1 &&
-                    selectedProductIndex < list.Count - 1)
+                if (_state.SelectedProductIndex % cols < cols - 1 &&
+                    _state.SelectedProductIndex < list.Count - 1)
                 {
-                    selectedProductIndex++;
+                    _state.SelectedProductIndex++;
                 }
                 break;
-
+                
             case NavigationAction.Up:
 
-                //  gå upp till offers
-                if (!categoryActive && !saleActive &&
-                    selectedProductIndex < cols &&
-                    productScrollOffset == 0)
+                //  gå upp till _state.Offers
+                if (!_state.CategoryActive && !_state.SaleActive &&
+                    _state.SelectedProductIndex < cols &&
+                    _state.ProductScrollOffset == 0)
                 {
-                    inOffers = true;
-                    selectedOfferIndex = 0;
+                    _state.InOffers = true;
+                    _state.SelectedOfferIndex = 0;
                     return;
                 }
 
-                if (selectedProductIndex - cols >= 0)
-                    selectedProductIndex -= cols;
+                if (_state.SelectedProductIndex - cols >= 0)
+                    _state.SelectedProductIndex -= cols;
 
-                if (selectedProductIndex < productScrollOffset)
-                    productScrollOffset -= cols;
+                if (_state.SelectedProductIndex < _state.ProductScrollOffset)
+                    _state.ProductScrollOffset -= cols;
 
-                if (productScrollOffset < 0)
-                    productScrollOffset = 0;
-
+                if (_state.ProductScrollOffset < 0)
+                    _state.ProductScrollOffset = 0;
                 break;
 
             case NavigationAction.Down:
 
-                if (selectedProductIndex + cols < list.Count)
-                    selectedProductIndex += cols;
+                if (_state.SelectedProductIndex + cols < list.Count)
+                    _state.SelectedProductIndex += cols;
 
-                int startY = categoryActive ? 6 : 20;
+                int startY = _state.CategoryActive ? 6 : 20;
                 int visibleRows = (Console.WindowHeight - startY) / 4;
                 int maxVisibleItems = visibleRows * cols;
 
-                if (selectedProductIndex >= productScrollOffset + maxVisibleItems)
-                    productScrollOffset += cols;
+                if (_state.SelectedProductIndex >= _state.ProductScrollOffset + maxVisibleItems)
+                    _state.ProductScrollOffset += cols;
 
                 break;
 
             case NavigationAction.Select:
 
-                if (selectedProductIndex < 0 || selectedProductIndex >= list.Count)
+                if (_state.SelectedProductIndex < 0 || _state.SelectedProductIndex >= list.Count)
                     return;
 
-                modalProduct = list[selectedProductIndex];
+                _state.ModalProduct = list[_state.SelectedProductIndex];
 
                 modalVariants = (await _repo.GetAllAsync())
-                    .Where(p => p.Name == modalProduct.Name)
+                    .Where(p => p.Name == _state.ModalProduct.Name)
                     .OrderBy(p => p.Size)
                     .ToList();
 
-                selectedSizeIndex = 0;
-                selectedModalButton = 0;
+                _state.SelectedSizeIndex = 0;
+                _state.SelectedModalButton = 0;
                 sizeErrorShown = false;
 
-                selectedSize = null; 
+                _state.SelectedSize = null; 
 
-                inModal = true;
+                _state.InModal = true;
                 break;
         }
     }
@@ -821,22 +781,22 @@ public class ShopMenu
             case NavigationAction.Select:
 
                 // välj storlek
-                if (selectedModalButton == 0)
+                if (_state.SelectedModalButton == 0)
                 {
-                    selectedSize = selectedSizeIndex;
+                    _state.SelectedSize = _state.SelectedSizeIndex;
                     return;
                 }
 
                 // Add to cart
-                if (selectedModalButton == 1)
+                if (_state.SelectedModalButton == 1)
                 {
-                    if (selectedSize == null)
+                    if (_state.SelectedSize == null)
                     {
                         TriggerSizeError();
                         return;
                     }
 
-                    var selected = modalVariants[selectedSize.Value];
+                    var selected = modalVariants[_state.SelectedSize.Value];
 
                     if (selected.Inventory == 0)
                     {
@@ -854,7 +814,7 @@ public class ShopMenu
                 }
 
                 // Back-knappen
-                if (selectedModalButton == 2)
+                if (_state.SelectedModalButton == 2)
                     ResetModal();
 
                 break;
@@ -864,36 +824,36 @@ public class ShopMenu
                 break;
 
             case NavigationAction.Up:
-                if (selectedModalButton == 0 && selectedSizeIndex > 0)
-                    selectedSizeIndex--;
-                else if (selectedModalButton > 0)
-                    selectedModalButton--;
+                if (_state.SelectedModalButton == 0 && _state.SelectedSizeIndex > 0)
+                    _state.SelectedSizeIndex--;
+                else if (_state.SelectedModalButton > 0)
+                    _state.SelectedModalButton--;
                 break;
 
             case NavigationAction.Down:
-                if (selectedModalButton == 0 && selectedSizeIndex < modalVariants.Count - 1)
-                    selectedSizeIndex++;
-                else if (selectedModalButton < 2)
-                    selectedModalButton++;
+                if (_state.SelectedModalButton == 0 && _state.SelectedSizeIndex < modalVariants.Count - 1)
+                    _state.SelectedSizeIndex++;
+                else if (_state.SelectedModalButton < 2)
+                    _state.SelectedModalButton++;
                 break;
 
             case NavigationAction.Right:
-                if (selectedModalButton == 0)
-                    selectedModalButton = 1;
+                if (_state.SelectedModalButton == 0)
+                    _state.SelectedModalButton = 1;
                 break;
 
             case NavigationAction.Left:
-                if (selectedModalButton > 0)
-                    selectedModalButton = 0;
+                if (_state.SelectedModalButton > 0)
+                    _state.SelectedModalButton = 0;
                 break;
         }
     }
 
     private void ResetModal()
     {
-        inModal = false;
-        selectedSizeIndex = 0;
-        selectedModalButton = 0;
+        _state.InModal = false;
+        _state.SelectedSizeIndex = 0;
+        _state.SelectedModalButton = 0;
         sizeErrorShown = false;
     }
     
@@ -908,38 +868,38 @@ public class ShopMenu
   
         // DROPDOWN AKTIV
         
-        if (categoriesOpen && selectedSidebarIndex == 1)
+        if (_state.CategoriesOpen && _state.SelectedSidebarIndex == 1)
         {
             switch (action)
             {
                 case NavigationAction.Up:
-                    if (selectedCategoryIndex > 0)
-                        selectedCategoryIndex--;
+                    if (_state.SelectedCategoryIndex > 0)
+                        _state.SelectedCategoryIndex--;
                     break;
 
                 case NavigationAction.Down:
-                    if (selectedCategoryIndex < categories.Length - 1)
-                        selectedCategoryIndex++;
+                    if (_state.SelectedCategoryIndex < categories.Length - 1)
+                        _state.SelectedCategoryIndex++;
                     break;
 
                 case NavigationAction.Select:
-                    selectedCategory = categories[selectedCategoryIndex];
-                    categoryActive = true;
+                    _state.SelectedCategory = categories[_state.SelectedCategoryIndex];
+                    _state.CategoryActive = true;
 
-                    await LoadCategoryProducts(selectedCategory);
+                    await LoadCategoryProducts(_state.SelectedCategory);
 
-                    categoriesOpen = false;     // stäng dropdown
-                    inSidebar = false;
-                    inProducts = true;
-                    inOffers = false;
+                    _state.CategoriesOpen = false;     // stäng dropdown
+                    _state.InSidebar = false;
+                    _state.InProducts = true;
+                    _state.InOffers = false;
 
-                    productScrollOffset = 0;
-                    selectedProductIndex = 0;
+                    _state.ProductScrollOffset = 0;
+                    _state.SelectedProductIndex = 0;
                     break;
 
                 case NavigationAction.Back:
                 case NavigationAction.Left:
-                    categoriesOpen = false;     // stäng dropdown
+                    _state.CategoriesOpen = false;     // stäng dropdown
                     break;
             }
 
@@ -951,19 +911,19 @@ public class ShopMenu
         switch (action)
         {
             case NavigationAction.Up:
-                if (selectedSidebarIndex > 0)
-                    selectedSidebarIndex--;
+                if (_state.SelectedSidebarIndex > 0)
+                    _state.SelectedSidebarIndex--;
                 break;
 
             case NavigationAction.Down:
-                if (selectedSidebarIndex < sidebarOptions.Length - 1)
-                    selectedSidebarIndex++;
+                if (_state.SelectedSidebarIndex < sidebarOptions.Length - 1)
+                    _state.SelectedSidebarIndex++;
                 break;
 
             case NavigationAction.Right:
-                inSidebar = false;
-                inOffers = !categoryActive;
-                inProducts = categoryActive;
+                _state.InSidebar = false;
+                _state.InOffers = !_state.CategoryActive;
+                _state.InProducts = _state.CategoryActive;
                 break;
 
             case NavigationAction.Select:
@@ -971,17 +931,17 @@ public class ShopMenu
                 
                 //  SALE
                 
-                if (selectedSidebarIndex == 0)
+                if (_state.SelectedSidebarIndex == 0)
                 {
-                    saleActive = true;
-                    categoryActive = false;
+                    _state.SaleActive = true;
+                    _state.CategoryActive = false;
 
-                    offerScrollOffset = 0; 
-                    selectedOfferIndex = 0;
+                    _state.OfferScrollOffset = 0; 
+                    _state.SelectedOfferIndex = 0;
 
-                    inSidebar = false;
-                    inOffers = true;
-                    inProducts = false;
+                    _state.InSidebar = false;
+                    _state.InOffers = true;
+                    _state.InProducts = false;
 
                     await LoadOffers();
                     return;
@@ -990,27 +950,27 @@ public class ShopMenu
                 
                 //  CATEGORIES
                 
-                if (selectedSidebarIndex == 1)
+                if (_state.SelectedSidebarIndex == 1)
                 {
-                    categoriesOpen = !categoriesOpen;
-                    selectedCategoryIndex = 0;
+                    _state.CategoriesOpen = !_state.CategoriesOpen;
+                    _state.SelectedCategoryIndex = 0;
                     return;
                 }
 
                 
                 // HOME PAGE
                 
-                if (selectedSidebarIndex == 2)
+                if (_state.SelectedSidebarIndex == 2)
                 {
                     //  reset ALL state
-                    saleActive = false;
-                    categoryActive = false;
-                    categoriesOpen = false;
+                    _state.SaleActive = false;
+                    _state.CategoryActive = false;
+                    _state.CategoriesOpen = false;
 
-                    inOffers = false;
-                    inProducts = false;
-                    inSidebar = false;
-                    inModal = false;
+                    _state.InOffers = false;
+                    _state.InProducts = false;
+                    _state.InSidebar = false;
+                    _state.InModal = false;
 
                     return; // lämnar Start()
                 }
@@ -1018,47 +978,48 @@ public class ShopMenu
 
                 // SHOPPING CART
 
-                if (selectedSidebarIndex == 3)
+                if (_state.SelectedSidebarIndex == 3)
                 {
                     await _shoppingCartMenu.Start();
                     return;
                 }
                 //  SEARCH
-                if (selectedSidebarIndex == 4)
+                if (_state.SelectedSidebarIndex == 4)
                 {
                     //  Stäng ALLA andra lägen
-                    saleActive = false;
-                    categoryActive = false;
-                    categoriesOpen = false;
+                    _state.SaleActive = false;
+                    _state.CategoryActive = false;
+                    _state.CategoriesOpen = false;
 
-                    inModal = false;
+                    _state.InModal = false;
 
                     //  Aktivera search
-                    searchActive = true;
-                    searchTyping = true;
+                    _state.SearchActive = true;
+                    _state.SearchTyping = true;
 
                     //  Reset input & resultat
-                    searchQuery = "";
+                    _state.SearchQuery = "";
                     searchResults.Clear();
 
                     //  Reset navigation
-                    selectedProductIndex = 0;
-                    productScrollOffset = 0;
+                    _state.SelectedProductIndex = 0;
+                    _state.ProductScrollOffset = 0;
 
                     //  Lämna andra vyer
-                    inSidebar = false;
-                    inOffers = false;
-                    inProducts = false;
+                    _state.InSidebar = false;
+                    _state.InOffers = false;
+                    _state.InProducts = false;
 
                     return;
                 }
                 
                 break;
         }
-    } 
+    }
+    
     private void HandleOffersNavigation(NavigationAction action)
     {
-        var list = saleActive ? offers : offers.Take(6).ToList();
+        var list = _state.SaleActive ? _state.Offers : _state.Offers.Take(6).ToList();
 
         int cols = 3;
 
@@ -1069,62 +1030,62 @@ public class ShopMenu
         switch (action)
         {
             case NavigationAction.Left:
-                if (selectedOfferIndex % cols > 0)
-                    selectedOfferIndex--;
+                if (_state.SelectedOfferIndex % cols > 0)
+                    _state.SelectedOfferIndex--;
                 else
                 {
-                    inOffers = false;
-                    inSidebar = true;
+                    _state.InOffers = false;
+                    _state.InSidebar = true;
                 }
                 break;
 
             case NavigationAction.Right:
-                if (selectedOfferIndex % cols < cols - 1 &&
-                    selectedOfferIndex < list.Count - 1)
-                    selectedOfferIndex++;
+                if (_state.SelectedOfferIndex % cols < cols - 1 &&
+                    _state.SelectedOfferIndex < list.Count - 1)
+                    _state.SelectedOfferIndex++;
                 break;
 
             case NavigationAction.Up:
 
-                if (selectedOfferIndex - cols >= 0)
-                    selectedOfferIndex -= cols;
+                if (_state.SelectedOfferIndex - cols >= 0)
+                    _state.SelectedOfferIndex -= cols;
 
-                if (selectedOfferIndex < offerScrollOffset)
-                    offerScrollOffset -= cols;
+                if (_state.SelectedOfferIndex < _state.OfferScrollOffset)
+                    _state.OfferScrollOffset -= cols;
 
-                if (offerScrollOffset < 0)
-                    offerScrollOffset = 0;
+                if (_state.OfferScrollOffset < 0)
+                    _state.OfferScrollOffset = 0;
                 
                 break;
 
             case NavigationAction.Down:
 
-                if (selectedOfferIndex + cols < list.Count)
+                if (_state.SelectedOfferIndex + cols < list.Count)
                 {
-                    selectedOfferIndex += cols;
+                    _state.SelectedOfferIndex += cols;
                 }
                 else
                 {
                     //  Endast i HOME (inte i sale)
-                    if (!saleActive)
+                    if (!_state.SaleActive)
                     {
-                        inOffers = false;
-                        inProducts = true;
-                        selectedProductIndex = 0;
+                        _state.InOffers = false;
+                        _state.InProducts = true;
+                        _state.SelectedProductIndex = 0;
                     }
                 }
 
                 //  Scroll (endast i sale)
-                if (saleActive)
+                if (_state.SaleActive)
                 {
-                    if (selectedOfferIndex >= offerScrollOffset + itemsPerPage)
-                        offerScrollOffset += cols;
+                    if (_state.SelectedOfferIndex >= _state.OfferScrollOffset + itemsPerPage)
+                        _state.OfferScrollOffset += cols;
                 }
                 
                 break;
 
             case NavigationAction.Select:
-                var product = list[selectedOfferIndex];
+                var product = list[_state.SelectedOfferIndex];
 
                 _cartService.AddToCart(product, 1);
 
@@ -1143,24 +1104,23 @@ public class ShopMenu
         await LoadOffers();
         await LoadProducts();
 
-        
-        inOffers = true;
-        inProducts = false;
-        inSidebar = false;
-        inModal = false;
-        categoriesOpen = false;
-        categoryActive = false;
-        saleActive = false;
-        searchActive = false;
-        searchTyping = false;
+        // Initial state
+        _state.InOffers = true;
+        _state.InProducts = false;
+        _state.InSidebar = false;
+        _state.InModal = false;
+        _state.CategoriesOpen = false;
+        _state.CategoryActive = false;
+        _state.SaleActive = false;
+        _state.SearchActive = false;
+        _state.SearchTyping = false;
 
         bool running = true;
 
         while (running)
         {
-            
-
-            if (searchTyping)
+            // SEARCH TYPING MODE
+            if (_state.SearchTyping)
             {
                 Console.SetCursorPosition(0, 0);
 
@@ -1168,33 +1128,30 @@ public class ShopMenu
                 DrawSidebar();
                 DrawSearchBox();
 
-             
                 await HandleSearchInput(NavigationAction.None);
 
                 await Task.Delay(16);
                 continue;
             }
 
-
-            //  NORMAL RENDER
-
+            // NORMAL RENDER
             Console.Clear();
 
             DrawHeader();
             DrawSidebar();
 
-            if (searchActive)
+            if (_state.SearchActive)
             {
                 DrawSearchBox();
 
-                if (!searchTyping)
-                    DrawProducts(); 
+                if (!_state.SearchTyping)
+                    DrawProducts();
             }
-            else if (saleActive)
+            else if (_state.SaleActive)
             {
                 DrawOffers();
             }
-            else if (!categoryActive)
+            else if (!_state.CategoryActive)
             {
                 DrawOffers();
                 DrawProducts();
@@ -1204,39 +1161,35 @@ public class ShopMenu
                 DrawProducts();
             }
 
-            //  Modal overlay
-            if (inModal)
+            // MODAL
+            if (_state.InModal)
                 DrawModal();
 
-        
             // INPUT
-           
             var action = _nav.GetAction();
 
-            // search input 
-            if (searchActive)
+            // SEARCH INPUT
+            if (_state.SearchActive)
                 await HandleSearchInput(action);
 
-        
             // GLOBAL BACK
-       
             if (action == NavigationAction.Back)
             {
-                categoriesOpen = false;
+                _state.CategoriesOpen = false;
 
-                if (inModal)
+                if (_state.InModal)
                 {
-                    inModal = false;
+                    _state.InModal = false;
                     continue;
                 }
 
-                if (inProducts || inOffers || searchActive)
+                if (_state.InProducts || _state.InOffers || _state.SearchActive)
                 {
-                    inSidebar = true;
-                    inProducts = false;
-                    inOffers = false;
-                    searchActive = false;
-                    saleActive = false;
+                    _state.InSidebar = true;
+                    _state.InProducts = false;
+                    _state.InOffers = false;
+                    _state.SearchActive = false;
+                    _state.SaleActive = false;
                     continue;
                 }
 
@@ -1244,37 +1197,38 @@ public class ShopMenu
                 break;
             }
 
-           
-            //  STATE ROUTING
-           
-            if (inModal)
+            // STATE ROUTING
+            if (_state.InModal)
             {
                 await HandleModalNavigation(action);
             }
-            else if (inSidebar)
+            else if (_state.InSidebar)
             {
                 await HandleSidebarNavigation(action);
 
                 // HOME → exit
-                if (!inSidebar && !inOffers && !inProducts && !inModal && !searchActive)
+                if (!_state.InSidebar &&
+                    !_state.InOffers &&
+                    !_state.InProducts &&
+                    !_state.InModal &&
+                    !_state.SearchActive)
                 {
                     running = false;
                     break;
                 }
             }
-            else if (inOffers)
+            else if (_state.InOffers)
             {
                 HandleOffersNavigation(action);
             }
-            else if (inProducts)
+            else if (_state.InProducts)
             {
                 await HandleProductsNavigation(action);
             }
 
-            // för att int blixtra
             await Task.Delay(16);
         }
-        
+
         Console.Clear();
     }
 
