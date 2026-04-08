@@ -1,6 +1,7 @@
 ﻿using _1.WebShop.Core.Entities;
 using _1.WebShop.Core.Interfaces;
 using _2.WebShop.Application.Services;
+using _4.WebShop.ConsoleApp.UI;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
@@ -12,77 +13,56 @@ namespace UI
     public class ShoppingCartMenu
     {
         private readonly CartService _cartService;
-        private readonly IProductRepository _productRepository;
+       
 
         private readonly IEnumerable<IPaymentMethod> _paymentMethods;
         private readonly IEnumerable<IShippingOption> _shippingOptions;
 
         private readonly CheckoutService _checkoutService;
+        private readonly ConsoleNavigationService _consoleNavigationService;
 
-        public ShoppingCartMenu(CartService cartService, IProductRepository productRepository,
+        public ShoppingCartMenu(CartService cartService, 
             IEnumerable<IPaymentMethod> paymentMethods,
-            IEnumerable<IShippingOption> shippingOptions, CheckoutService checkoutService)
+            IEnumerable<IShippingOption> shippingOptions, CheckoutService checkoutService, ConsoleNavigationService consoleNavigationService)
         {
             _cartService = cartService;
-            _productRepository = productRepository;
             _paymentMethods = paymentMethods;
             _shippingOptions = shippingOptions;
             _checkoutService = checkoutService;
+            _consoleNavigationService = consoleNavigationService;
         }
 
         public async Task Start()
         {
-            var products = await _productRepository.GetAllAsync();
 
+            int selectedIndex = 0;
             bool running = true;
 
             while (running)
             {
-                Console.Clear();
-                Console.WriteLine("=== WEBSHOP SHOPPING CART ===");
-                Console.WriteLine("1. View products");
-                Console.WriteLine("2. Add to cart");
-                Console.WriteLine("3. View cart");
-                Console.WriteLine("4. Update quantity");
-                Console.WriteLine("5. Remove product");
-                Console.WriteLine("6. Checkout");
-                Console.WriteLine("9. Exit");
+                DrawMenu(selectedIndex);
 
-                var choice = Console.ReadLine();
+                var action = _consoleNavigationService.GetAction();
 
-                switch (choice)
+                switch (action)
                 {
-                    case "1":
-                        ShowProducts(products);
+                    case NavigationAction.Up:
+                        selectedIndex = selectedIndex > 0 ? selectedIndex - 1 : 4;
                         break;
 
-                    case "2":
-                        AddToCart(products);
+                    case NavigationAction.Down:
+                        selectedIndex = selectedIndex < 4 ? selectedIndex + 1 : 0;
                         break;
 
-                    case "3":
-                        ShowCart();
-                        break;
+                    case NavigationAction.Select:
+                        await ExecuteChoice(selectedIndex);
+                        if (selectedIndex == 4) 
+                            running = false;
 
-                    case "4":
-                        UpdateQuantity();
-                        break;
-
-                    case "5":
-                        RemoveFromCart();
-                        break;
-
-                    case "6":
-                        Checkout();
-                        break;
-
-                    case "9":
-                        running = false;
+                        Console.WriteLine("\nPress any key to continue...");
+                        Console.ReadKey();
                         break;
                 }
-
-                Console.WriteLine("\nPress any key to continue...");
-                Console.ReadKey();
             }
         }
 
@@ -98,6 +78,13 @@ namespace UI
 
             var shippingInfo = GetShippingInfo();
             var shipping = SelectShipping();
+
+            if (shipping == null)
+            {
+                Console.WriteLine("Shipping selection cancelled.");
+                Console.ReadKey();
+                return;
+            }
 
             var summary = _checkoutService.CreateSummary(shipping);
 
@@ -116,26 +103,131 @@ namespace UI
 
             var paymentMethod = SelectPaymentMethod();
 
+            if (paymentMethod == null)
+            {
+                Console.WriteLine("Payment selection cancelled.");
+                Console.ReadKey();
+                return;
+            }
+
+
             _checkoutService.CompleteOrder(paymentMethod, summary.Total);
 
             Console.WriteLine("Order completed");
 
         }
 
+        private void DrawMenu(int selectedIndex)
+        {
+            string[] options =
+            {
+                
+                "View cart",
+                "Update quantity",
+                "Remove product",
+                "Checkout",
+                "Exit"
+            };
+
+            Console.Clear();
+            Console.WriteLine("=== WEBSHOP SHOPPING CART ===\n");
+
+            for (int i = 0; i < options.Length; i++)
+            {
+                bool selected = i == selectedIndex;
+
+                if (selected)
+                {
+                    Console.ForegroundColor = ConsoleColor.Black;
+                    Console.BackgroundColor = ConsoleColor.White;
+                }
+
+                Console.WriteLine(options[i]);
+
+                Console.ResetColor(); 
+            }
+        }
+
+        private async Task ExecuteChoice(int index)
+        {
+
+            switch (index)
+            {
+                case 0:
+                    ShowCart();
+                    break;
+
+                case 1:
+                    UpdateQuantity();
+                    break;
+
+                case 2:
+                    RemoveFromCart();
+                    break;
+
+                case 3:
+                    Checkout();
+                    break;
+
+                case 4:
+                    break;
+
+            }
+        }
+
+        private int EditQuantity(int startValue)
+        {
+            int quantity = startValue;
+
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine("=== EDIT QUANTITY ===\n");
+
+                Console.ForegroundColor = ConsoleColor.Black;
+                Console.BackgroundColor = ConsoleColor.White;
+                Console.WriteLine($"Quantity: {quantity}".PadRight(30));
+                Console.ResetColor();
+
+                Console.WriteLine("\nUP = +1 | DOWN = -1");
+                Console.WriteLine("ENTER = confirm | BACKSPACE = cancel");
+
+                var action = _consoleNavigationService.GetAction();
+
+                switch (action)
+                {
+                    case NavigationAction.Up:
+                        quantity++;
+                        break;
+
+                    case NavigationAction.Down:
+                        if (quantity > 1)
+                            quantity--;
+                        break;
+
+                    case NavigationAction.Select:
+                        return quantity;
+
+                    case NavigationAction.Back:
+                        return startValue;
+                }
+            }
+        }
+
         private IShippingOption SelectShipping()
         {
-            Console.WriteLine("\n=== SHIPPING OPTIONS ===");
-
             var options = _shippingOptions.ToList();
 
-            for (int i = 0; i < options.Count; i++)
-            {
-                Console.WriteLine($"{i + 1}. {options[i].Name} ({options[i].Price} kr)");
-            }
+            var selector = new ListSelector<IShippingOption>(_consoleNavigationService);
 
-            int choice = int.Parse(Console.ReadLine()) - 1;
+            var selected = selector.Select(
+                options,
+                s => $"{s.Name} ({s.Price} kr)",
+                "Shipping options"
+            );
 
-            return options[choice];
+            return selected;
+
         }
 
         private ShippingInfo GetShippingInfo()
@@ -155,49 +247,22 @@ namespace UI
             };
         }
 
-
         private IPaymentMethod SelectPaymentMethod()
         {
-            Console.WriteLine("\n=== PAYMENT METHODS ===");
 
             var methods = _paymentMethods.ToList();
 
-            for (int i = 0; i < methods.Count; i++)
-            {
-                Console.WriteLine($"{i + 1}. {methods[i].Name}");
-            }
+            var selector = new ListSelector<IPaymentMethod>(_consoleNavigationService);
 
-            int choice = int.Parse(Console.ReadLine()) - 1;
+            var selected = selector.Select(
+                methods,
+                m => m.Name,
+                "Payment methods"
+            );
 
-            return methods[choice];
-        }
+            return selected;
 
-        private void ShowProducts(List<Product> products)
-        {
-            Console.WriteLine("\n=== PRODUCTS ===");
 
-            for (int i = 0; i < products.Count; i++)
-            {
-                var p = products[i];
-                Console.WriteLine($"{i + 1}. {p.Name} - {p.Price} kr");
-            }
-        }
-
-        private void AddToCart(List<Product> products)
-        {
-            ShowProducts(products);
-
-            Console.Write("Select product: ");
-            int index = int.Parse(Console.ReadLine()) - 1;
-
-            Console.Write("Quantity: ");
-            int quantity = int.Parse(Console.ReadLine());
-
-            var product = products[index];
-
-            _cartService.AddToCart(product, quantity);
-
-            Console.WriteLine("Product added to cart!");
         }
 
         private void ShowCart()
@@ -228,28 +293,39 @@ namespace UI
 
         private void UpdateQuantity()
         {
+
             var cart = _cartService.GetCart();
 
             if (!cart.Items.Any())
             {
                 Console.WriteLine("Cart is empty.");
+                Console.ReadKey();
                 return;
             }
 
-            ShowCart();
+            var selector = new ListSelector<CartItem>(_consoleNavigationService);
 
-            Console.Write("Select product: ");
-            int index = int.Parse(Console.ReadLine()) - 1;
+            var selectedItem = selector.Select(
+                cart.Items.ToList(),
+                item => $"{item.Product.Name} x {item.Quantity}",
+                "Update quantity"
+            );
 
-            var item = cart.Items[index];
+            
+            if (selectedItem == null)
+                return;
 
-            Console.Write("New quantity: ");
-            int newQuantity = int.Parse(Console.ReadLine());
+            int newQuantity = EditQuantity(selectedItem.Quantity);
 
-            _cartService.RemoveFromCart(item.Product);
-            _cartService.AddToCart(item.Product, newQuantity);
+            
+            _cartService.RemoveFromCart(selectedItem.Product);
+            _cartService.AddToCart(selectedItem.Product, newQuantity);
 
-            Console.WriteLine("Quantity updated!");
+            Console.WriteLine("\nQuantity updated!");
+            Console.ReadKey();
+
+
+
         }
 
         private void RemoveFromCart()
@@ -259,19 +335,29 @@ namespace UI
             if (!cart.Items.Any())
             {
                 Console.WriteLine("Cart is empty.");
+                Console.ReadKey();
                 return;
             }
 
-            ShowCart();
+            var selector = new ListSelector<CartItem>(_consoleNavigationService);
 
-            Console.Write("Select product to remove: ");
-            int index = int.Parse(Console.ReadLine()) - 1;
+            var selectedItem = selector.Select(
+                cart.Items.ToList(),
+                item => $"{item.Product.Name} x {item.Quantity}",
+                "Remove product"
+            );
 
-            var item = cart.Items[index];
+            
+            if (selectedItem == null)
+                return;
 
-            _cartService.RemoveFromCart(item.Product);
+            _cartService.RemoveFromCart(selectedItem.Product);
 
-            Console.WriteLine("Product removed!");
+            Console.WriteLine("\nProduct removed!");
+            Console.ReadKey();
         }
+
+
+
     }
 }
