@@ -46,7 +46,7 @@ namespace _3.WebShop.Infrastructure.Repositories
             }
         }
         public async Task SeedAsync()
-        {
+        {   
             if (_context.Products.Any())
                 return;
 

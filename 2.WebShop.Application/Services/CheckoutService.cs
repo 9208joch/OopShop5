@@ -10,10 +10,12 @@ namespace _2.WebShop.Application.Services
     {
 
         private readonly CartService _cartService;
+        private readonly IProductRepository _productRepository;
 
-        public CheckoutService(CartService cartService)
+        public CheckoutService(CartService cartService, IProductRepository productRepository)
         {
             _cartService = cartService;
+            _productRepository = productRepository;
         }
 
         public CheckoutSummary CreateSummary(IShippingOption shipping)
@@ -37,9 +39,24 @@ namespace _2.WebShop.Application.Services
             };
         }
 
-        public void CompleteOrder(IPaymentMethod paymentMethod, decimal totalAmount)
+        public async Task CompleteOrder(IPaymentMethod paymentMethod, decimal totalAmount)
         {
+            var cart = _cartService.GetCart();
+
+            foreach (var item in cart.Items)
+            {
+                var product = await _productRepository.GetByIdAsync(item.Product.Id);
+
+                if (product.Inventory < item.Quantity)
+                    throw new Exception($"Not enough stock for {product.Name}");
+
+                product.Inventory -= item.Quantity;
+
+                await _productRepository.UpdateAsync(product);
+            }
+
             paymentMethod.Pay(totalAmount);
+
             _cartService.ClearCart();
         }
 

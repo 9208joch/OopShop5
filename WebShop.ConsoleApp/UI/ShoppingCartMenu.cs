@@ -66,7 +66,7 @@ namespace UI
             }
         }
 
-        private void Checkout()
+        private async Task Checkout()
         {
             var cart = _cartService.GetCart();
 
@@ -111,7 +111,7 @@ namespace UI
             }
 
 
-            _checkoutService.CompleteOrder(paymentMethod, summary.Total);
+            await _checkoutService.CompleteOrder(paymentMethod, summary.Total);
 
             Console.WriteLine("Order completed");
 
@@ -166,7 +166,7 @@ namespace UI
                     break;
 
                 case 3:
-                    Checkout();
+                    await Checkout();
                     break;
 
                 case 4:
