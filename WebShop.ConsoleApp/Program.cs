@@ -28,7 +28,8 @@ services.AddScoped<IPaymentMethod, SwishPayment>();
 
 services.AddScoped<IShippingOption, StandardShipping>();
 services.AddScoped<IShippingOption, ExpressShipping>();
-
+services.AddScoped<AdminMenu>();
+services.AddScoped<ICustomerRepository, CustomerRepository>();
 
 //var provider = services.BuildServiceProvider();
 
@@ -51,7 +52,7 @@ using (var scope = provider.CreateScope())
 
     var menu = scope.ServiceProvider.GetRequiredService<Menu>();
     await menu.Start();
-<<<<<<< HEAD
+
 }
 
 
@@ -85,6 +86,3 @@ namespace WebShop.ConsoleApp
     } 
 }
 
-=======
-}
->>>>>>> 582724bf2a4cd813c1c38949c923ffa868bedaca

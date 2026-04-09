@@ -9,7 +9,7 @@ using System.Text;
 
 namespace _3.WebShop.Infrastructure.Repositories
 {
-    internal class CustomerRepository : ICustomerRepository
+    public class CustomerRepository : ICustomerRepository
     {
         private readonly WebShopContext _context;
 

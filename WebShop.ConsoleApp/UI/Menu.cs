@@ -13,16 +13,24 @@ public class Menu
 {
     private readonly ShopMenu _shop;
     private readonly IDistanceService _distanceService;
+    private readonly AdminMenu _adminMenu;
 
 
     private readonly ShoppingCartMenu _shoppingCartMenu;   //NK...
 
-    public Menu(IProductRepository repo, ConsoleNavigationService nav, ShopMenu shop, ShoppingCartMenu shoppingCartMenu)   //NK...ShoppingCartMenu shoppingCartMenu
+    public Menu(
+    IProductRepository repo,
+    ConsoleNavigationService nav,
+    ShopMenu shop,
+    ShoppingCartMenu shoppingCartMenu,
+    AdminMenu adminMenu)
     {
+        
         _repo = repo;
         _nav = nav;
         _shop = shop;
         _shoppingCartMenu = shoppingCartMenu;   //NK...
+        _adminMenu = adminMenu;
     }
     private readonly IProductRepository _repo;
 
@@ -332,8 +340,11 @@ public class Menu
                 
             case 3:
                 Console.Clear();
-                Console.WriteLine("Admin coming soon...");
-                Console.ReadKey();
+                if (_adminMenu != null)
+                {
+
+                    await _adminMenu.ShowMenuAsync();
+                }
                 break;
 
             case 4:

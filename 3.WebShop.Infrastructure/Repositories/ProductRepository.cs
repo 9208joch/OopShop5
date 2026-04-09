@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace _3.WebShop.Infrastructure.Repositories
 {
@@ -45,6 +47,14 @@ namespace _3.WebShop.Infrastructure.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        // Implement AddProductAsync declared in the interface
+        public async Task AddProductAsync(Product newProduct)
+        {
+            // Delegate to existing AddAsync implementation
+            await AddAsync(newProduct);
+        }
+
         public async Task SeedAsync()
         {   
             if (_context.Products.Any())
