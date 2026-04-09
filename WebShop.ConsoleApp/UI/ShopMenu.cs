@@ -32,6 +32,7 @@ public class ShopMenu
     private readonly ShopModalNavigationHandler _modalHandler;
     private readonly ShopSidebarNavigationHandler _sidebarHandler;
     private readonly ShopSearchHandler _searchHandler;
+    private readonly CommonRenderer _commonRenderer = new();
 
     public ShopMenu(
     IProductRepository repo,
@@ -206,7 +207,7 @@ public class ShopMenu
             {
                 Console.SetCursorPosition(0, 0);
 
-                _renderer.DrawHeader();
+                _commonRenderer.DrawHeader();
                 _renderer.DrawSidebar(_state, sidebarOptions, categories);
                 _renderer.DrawSearchBox(_state);
 
@@ -222,7 +223,7 @@ public class ShopMenu
             //  NORMAL RENDER
             Console.Clear();
 
-            _renderer.DrawHeader();
+            _commonRenderer.DrawHeader();
             _renderer.DrawSidebar(_state, sidebarOptions, categories);
 
             if (_state.SearchActive)
