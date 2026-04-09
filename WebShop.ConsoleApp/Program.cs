@@ -51,4 +51,40 @@ using (var scope = provider.CreateScope())
 
     var menu = scope.ServiceProvider.GetRequiredService<Menu>();
     await menu.Start();
+<<<<<<< HEAD
 }
+
+
+namespace WebShop.ConsoleApp
+{
+    internal class Program
+    {
+        static async Task Main(string[] args)
+        {
+            // sätt ihop alla kopplingar i en service collection
+            var servicesCollection = new ServiceCollection();
+
+            // koppla database
+            servicesCollection.AddDbContext<WebShopContext>();
+
+            // koppla ihop repository-klasserna med service
+            servicesCollection.AddScoped<IProductRepository, ProductRepository>();
+            servicesCollection.AddScoped<ICustomerRepository, ICustomerRepository>();
+
+            servicesCollection.AddScoped<AdminMenu>();
+
+            // koppla ihop nya menyn med de nya repository-klasserna
+            var serviceProvider = servicesCollection.BuildServiceProvider();
+
+
+            // kör igång adminmenyn
+            var adminMenu = serviceProvider.GetRequiredService<AdminMenu>();
+            await adminMenu.ShowMenuAsync();
+
+        }
+    } 
+}
+
+=======
+}
+>>>>>>> 582724bf2a4cd813c1c38949c923ffa868bedaca
