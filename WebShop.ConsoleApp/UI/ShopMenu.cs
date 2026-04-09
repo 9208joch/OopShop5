@@ -2,6 +2,9 @@
 using System.Linq;
 using _1.WebShop.Core.Entities;
 using _1.WebShop.Core.Interfaces;
+using _2.WebShop.Application.Services;
+using WebShop.ConsoleApp;
+using UI;
 using static System.Collections.Specialized.BitVector32;
 
 public class ShopMenu
@@ -55,17 +58,25 @@ public class ShopMenu
     private DateTime lastErrorTime = DateTime.MinValue;
 
     private int offerScrollOffset = 0;
+    private readonly ShoppingCartMenu _shoppingCartMenu;
+    private readonly CartService _cartService;
 
 
 
 
-    public ShopMenu(IProductRepository repo, ConsoleNavigationService nav)
+    public ShopMenu(
+    IProductRepository repo,
+    ConsoleNavigationService nav,
+    CartService cartService,
+    ShoppingCartMenu shoppingCartMenu)
     {
         _repo = repo;
         _nav = nav;
+        _cartService = cartService;
+        _shoppingCartMenu = shoppingCartMenu;
     }
 
-
+    
 
     private async Task LoadOffers()
     {
@@ -106,7 +117,7 @@ public class ShopMenu
 
         selectedProductIndex = 0;
     }
-
+    
     private void DrawSidebar()
     {
         int x = 2;
@@ -502,9 +513,9 @@ public class ShopMenu
     
     private async Task HandleSearchInput(NavigationAction action)
     {
-        
+
         //  INPUT 
-      
+        
         if (searchTyping && Console.KeyAvailable)
         {
             var key = Console.ReadKey(true);
@@ -527,7 +538,7 @@ public class ShopMenu
 
                 return;
             }
-
+            
             //  BACKSPACE
             if (key.Key == ConsoleKey.Backspace && searchQuery.Length > 0)
             {
@@ -672,6 +683,7 @@ public class ShopMenu
         Console.BackgroundColor = ConsoleColor.DarkGray;
         Console.ForegroundColor = ConsoleColor.Black;
 
+
         if (selectedModalButton == 1)
         {
             Console.BackgroundColor = ConsoleColor.Gray;
@@ -802,25 +814,20 @@ public class ShopMenu
         }
     }
 
-
-
-
-
-
     private async Task HandleModalNavigation(NavigationAction action)
     {
         switch (action)
         {
             case NavigationAction.Select:
 
-                //  välj storlek (inte knapp)
+                // välj storlek
                 if (selectedModalButton == 0)
                 {
                     selectedSize = selectedSizeIndex;
                     return;
                 }
 
-                //  Add to cart
+                // Add to cart
                 if (selectedModalButton == 1)
                 {
                     if (selectedSize == null)
@@ -837,6 +844,8 @@ public class ShopMenu
                         return;
                     }
 
+                    _cartService.AddToCart(selected, 1);
+
                     Console.Clear();
                     Console.WriteLine($"Added {selected.Name} ({selected.Size})");
                     _nav.GetAction();
@@ -844,6 +853,7 @@ public class ShopMenu
                     ResetModal();
                 }
 
+                // Back-knappen
                 if (selectedModalButton == 2)
                     ResetModal();
 
@@ -852,18 +862,21 @@ public class ShopMenu
             case NavigationAction.Back:
                 ResetModal();
                 break;
+
             case NavigationAction.Up:
                 if (selectedModalButton == 0 && selectedSizeIndex > 0)
                     selectedSizeIndex--;
                 else if (selectedModalButton > 0)
                     selectedModalButton--;
                 break;
+
             case NavigationAction.Down:
                 if (selectedModalButton == 0 && selectedSizeIndex < modalVariants.Count - 1)
                     selectedSizeIndex++;
                 else if (selectedModalButton < 2)
                     selectedModalButton++;
                 break;
+
             case NavigationAction.Right:
                 if (selectedModalButton == 0)
                     selectedModalButton = 1;
@@ -874,7 +887,6 @@ public class ShopMenu
                     selectedModalButton = 0;
                 break;
         }
-        
     }
 
     private void ResetModal()
@@ -1003,14 +1015,12 @@ public class ShopMenu
                     return; // lämnar Start()
                 }
 
-               
+
                 // SHOPPING CART
-              
+
                 if (selectedSidebarIndex == 3)
                 {
-                    Console.Clear();
-                    Console.WriteLine("Shopping cart coming soon...");
-                    _nav.GetAction();
+                    await _shoppingCartMenu.Start();
                     return;
                 }
                 //  SEARCH
@@ -1084,7 +1094,7 @@ public class ShopMenu
 
                 if (offerScrollOffset < 0)
                     offerScrollOffset = 0;
-
+                
                 break;
 
             case NavigationAction.Down:
@@ -1114,8 +1124,12 @@ public class ShopMenu
                 break;
 
             case NavigationAction.Select:
+                var product = list[selectedOfferIndex];
+
+                _cartService.AddToCart(product, 1);
+
                 Console.Clear();
-                Console.WriteLine($"Added {list[selectedOfferIndex].Name}");
+                Console.WriteLine($"Added {product.Name} to cart");
                 _nav.GetAction();
                 break;
         }
@@ -1260,7 +1274,7 @@ public class ShopMenu
             // för att int blixtra
             await Task.Delay(16);
         }
-
+        
         Console.Clear();
     }
 
