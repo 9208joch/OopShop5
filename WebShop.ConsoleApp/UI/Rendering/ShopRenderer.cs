@@ -22,7 +22,10 @@ namespace WebShop.ConsoleApp.UI.Rendering
             int cardWidth = 30;
             int innerWidth = 28;
 
-            int startY = state.CategoryActive ? 6 : 20;
+            int startY =
+             state.SearchActive ? 10 :
+             state.CategoryActive ? 6 :
+              20;
             int startX = (Console.WindowWidth - (cardWidth * 3)) / 2;
             int maxHeight = Console.WindowHeight - 2;
 

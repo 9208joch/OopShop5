@@ -12,7 +12,9 @@ namespace WebShop.ConsoleApp.UI.State
         public List<Product> Products = new();
 
         public List<Product> FilteredProducts = new();
-        
+
+        public DateTime LastTypingTime = DateTime.MinValue;
+
 
         public int SelectedOfferIndex;
         public int SelectedProductIndex;

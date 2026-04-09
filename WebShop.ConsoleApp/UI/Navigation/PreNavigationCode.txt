@@ -316,3 +316,44 @@ detta är sparat utifall något "går sönder" under merge
     //            break;
     //    }
     //}
+
+        //private void Highlight()
+    //{
+    //    Console.BackgroundColor = ConsoleColor.White;
+    //    Console.ForegroundColor = ConsoleColor.Black;
+    //}
+        //private void DrawHighlightedText(string text, string query, int x, int y, int width)
+    //{
+    //    Console.SetCursorPosition(x, y);
+
+    //    if (string.IsNullOrWhiteSpace(query))
+    //    {
+    //        Console.WriteLine(text.PadRight(width));
+    //        return;
+    //    }
+
+    //    int index = text.IndexOf(query, StringComparison.OrdinalIgnoreCase);
+
+    //    if (index < 0)
+    //    {
+    //        Console.WriteLine(text.PadRight(width));
+    //        return;
+    //    }
+
+    //    // före match
+    //    Console.Write(text.Substring(0, index));
+
+    //    //  highlight match
+    //    Console.ForegroundColor = ConsoleColor.Yellow;
+    //    Console.Write(text.Substring(index, query.Length));
+    //    Console.ResetColor();
+
+    //    // efter match
+    //    Console.Write(text.Substring(index + query.Length));
+
+    //    // fyll resten
+    //    int remaining = width - text.Length;
+    //    if (remaining > 0)
+    //        Console.Write(new string(' ', remaining));
+    //}
+   

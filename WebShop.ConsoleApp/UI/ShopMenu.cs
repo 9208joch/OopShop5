@@ -12,7 +12,6 @@ using static System.Collections.Specialized.BitVector32;
 
 public class ShopMenu
 {
-
     private readonly ShopState _state = new();
     private readonly IProductRepository _repo;
     private readonly ConsoleNavigationService _nav;
@@ -31,6 +30,8 @@ public class ShopMenu
     private readonly ShopRenderer _renderer = new();
     private readonly ShopNavigationHandler _navHandler;
     private readonly ShopModalNavigationHandler _modalHandler;
+    private readonly ShopSidebarNavigationHandler _sidebarHandler;
+    private readonly ShopSearchHandler _searchHandler;
 
     public ShopMenu(
     IProductRepository repo,
@@ -45,10 +46,9 @@ public class ShopMenu
 
         _navHandler = new ShopNavigationHandler(_repo, _cartService);
         _modalHandler = new ShopModalNavigationHandler(_cartService, _nav);
+        _sidebarHandler = new ShopSidebarNavigationHandler();
+        _searchHandler = new ShopSearchHandler(_repo);
     }
-    
-
-
     private async Task LoadOffers()
     {
         _state.Offers = (await _repo.GetAllAsync())
@@ -56,7 +56,6 @@ public class ShopMenu
             .GroupBy(p => p.Name)
             .Select(g => g.First())
             .OrderBy(x => Guid.NewGuid())
-            //.Take(6) <-- test
             .ToList();
 
         _state.SelectedOfferIndex = 0;
@@ -88,181 +87,7 @@ public class ShopMenu
 
         _state.SelectedProductIndex = 0;
     }
-    
-    
-    private void DrawHighlightedText(string text, string query, int x, int y, int width)
-    {
-        Console.SetCursorPosition(x, y);
-
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            Console.WriteLine(text.PadRight(width));
-            return;
-        }
-
-        int index = text.IndexOf(query, StringComparison.OrdinalIgnoreCase);
-
-        if (index < 0)
-        {
-            Console.WriteLine(text.PadRight(width));
-            return;
-        }
-
-        // före match
-        Console.Write(text.Substring(0, index));
-
-        //  highlight match
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.Write(text.Substring(index, query.Length));
-        Console.ResetColor();
-
-        // efter match
-        Console.Write(text.Substring(index + query.Length));
-
-        // fyll resten
-        int remaining = width - text.Length;
-        if (remaining > 0)
-            Console.Write(new string(' ', remaining));
-    }
-   
-    private void DrawSearchResults()
-    {
-        int cardWidth = 30;
-        int innerWidth = 28;
-
-        int startY = 10;
-        int startX = (Console.WindowWidth - (cardWidth * 3)) / 2;
-
-        int maxHeight = Console.WindowHeight - 2;
-
-        int visibleRows = (maxHeight - startY) / 4;
-        int itemsPerPage = visibleRows * 3;
-
-        for (int i = 0; i < itemsPerPage; i++)
-        {
-            int index = i + _state.ProductScrollOffset;
-            if (index >= searchResults.Count) break;
-
-            var p = searchResults[index];
-
-            int col = i % 3;
-            int row = i / 3;
-
-            int x = startX + col * cardWidth;
-            int y = startY + row * 4;
-
-            Console.SetCursorPosition(x, y);
-            Console.WriteLine(p.Name.PadRight(innerWidth));
-
-            Console.SetCursorPosition(x, y + 1);
-
-            if (p.IsOnSale)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write($"Old: {p.Price} ");
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"New: {p.SalePrice}");
-            }
-            else
-            {
-                Console.WriteLine($"Price: {p.Price}");
-            }
-
-            Console.ResetColor();
-
-            Console.SetCursorPosition(x, y + 2);
-            Console.WriteLine("[More info]");
-        }
-    }
-    
-    private async Task HandleSearchInput(NavigationAction action)
-    {
-
-        //  INPUT 
-        
-        if (_state.SearchTyping && Console.KeyAvailable)
-        {
-            var key = Console.ReadKey(true);
-
-            //  ESC  lämna search direkt
-            if (key.Key == ConsoleKey.Escape)
-            {
-                _state.SearchActive = false;
-                _state.SearchTyping = false;
-
-                _state.SearchQuery = "";
-                searchResults.Clear();
-
-                _state.SelectedProductIndex = 0;
-                _state.ProductScrollOffset = 0;
-
-                _state.InSidebar = true;
-                _state.InProducts = false;
-                _state.InOffers = false;
-
-                return;
-            }
-            
-            //  BACKSPACE
-            if (key.Key == ConsoleKey.Backspace && _state.SearchQuery.Length > 0)
-            {
-                _state.SearchQuery = _state.SearchQuery[..^1];
-            }
-            //  ENTER  trigga direkt sökning
-            else if (key.Key == ConsoleKey.Enter && _state.SearchQuery.Length >= 2)
-            {
-                await ExecuteSearch();
-                return;
-            }
-            //  TEXT INPUT
-            else if (!char.IsControl(key.KeyChar))
-            {
-                _state.SearchQuery += key.KeyChar;
-            }
-
-            // reset timer
-            lastTypingTime = DateTime.Now;
-        }
-        
-   
-        //  AUTO SEARCH (1 sek delay)
-        
-        if (_state.SearchTyping &&
-            _state.SearchQuery.Length >= 2 &&
-            (DateTime.Now - lastTypingTime).TotalSeconds >= 1)
-        {
-            await ExecuteSearch();
-        }
-    }
-    
-    private async Task ExecuteSearch()
-    {
-        var all = await _repo.GetAllAsync();
-
-        searchResults = all
-            .Where(p => p.Name.Contains(_state.SearchQuery, StringComparison.OrdinalIgnoreCase))
-            .GroupBy(p => p.Name)
-            .Select(g => g.First())
-            .ToList();
-
-        //  växla till resultatläge
-        _state.SearchTyping = false;
-
-        _state.SelectedProductIndex = 0;
-        _state.ProductScrollOffset = 0;
-
-        _state.InProducts = true;
-        _state.InOffers = false;
-        _state.InSidebar = false;
-    }
-
-
-    private void Highlight()
-    {
-        Console.BackgroundColor = ConsoleColor.White;
-        Console.ForegroundColor = ConsoleColor.Black;
-    }
-
+ 
     private void ResetModal()
     {
         _state.InModal = false;
@@ -276,8 +101,7 @@ public class ShopMenu
         sizeErrorShown = true;
         lastErrorTime = DateTime.Now;
     }
-    
-    
+
     private void HandleOffersNavigation(NavigationAction action)
     {
         var list = _state.SaleActive ? _state.Offers : _state.Offers.Take(6).ToList();
@@ -342,7 +166,6 @@ public class ShopMenu
                     if (_state.SelectedOfferIndex >= _state.OfferScrollOffset + itemsPerPage)
                         _state.OfferScrollOffset += cols;
                 }
-                
                 break;
 
             case NavigationAction.Select:
@@ -356,8 +179,6 @@ public class ShopMenu
                 break;
         }
     }
-
-
     public async Task Start()
     {
         Console.CursorVisible = false;
@@ -380,7 +201,7 @@ public class ShopMenu
 
         while (running)
         {
-            // SEARCH TYPING MODE
+            //  SEARCH TYPING MODE
             if (_state.SearchTyping)
             {
                 Console.SetCursorPosition(0, 0);
@@ -389,13 +210,16 @@ public class ShopMenu
                 _renderer.DrawSidebar(_state, sidebarOptions, categories);
                 _renderer.DrawSearchBox(_state);
 
-                await HandleSearchInput(NavigationAction.None);
+                await _searchHandler.HandleInput(
+                    _state,
+                    searchResults
+                    );
 
                 await Task.Delay(16);
                 continue;
             }
 
-            // NORMAL RENDER
+            //  NORMAL RENDER
             Console.Clear();
 
             _renderer.DrawHeader();
@@ -422,18 +246,23 @@ public class ShopMenu
                 _renderer.DrawProducts(_state, searchResults);
             }
 
-            // MODAL
+            //  MODAL
             if (_state.InModal)
+            {
                 _renderer.DrawModal(_state, modalVariants, sizeErrorShown, lastErrorTime);
+            }
 
             // INPUT
             var action = _nav.GetAction();
 
-            // SEARCH INPUT
+            //  SEARCH INPUT
             if (_state.SearchActive)
-                await HandleSearchInput(action);
-
-            // GLOBAL BACK
+            {
+                await _searchHandler.HandleInput(
+                    _state,
+                    searchResults);
+            }
+            //  GLOBAL BACK
             if (action == NavigationAction.Back)
             {
                 _state.CategoriesOpen = false;
@@ -443,7 +272,6 @@ public class ShopMenu
                     _state.InModal = false;
                     continue;
                 }
-
                 if (_state.InProducts || _state.InOffers || _state.SearchActive)
                 {
                     _state.InSidebar = true;
@@ -453,32 +281,29 @@ public class ShopMenu
                     _state.SaleActive = false;
                     continue;
                 }
-                
                 running = false;
                 break;
             }
-
-            // STATE ROUTING
+            //  STATE ROUTING
             if (_state.InModal)
             {
                 await _modalHandler.Handle(
-                 _state,
-                action,
-                modalVariants,
-                ResetModal,
-                TriggerSizeError);
+                    _state,
+                    action,
+                    modalVariants,
+                    ResetModal,
+                    TriggerSizeError);
             }
             else if (_state.InSidebar)
             {
-                await _navHandler.HandleSidebarNavigation(
-                   _state,
+                await _sidebarHandler.Handle(
+                    _state,
                     action,
                     categories,
                     LoadCategoryProducts,
                     LoadOffers,
                     async () => await _shoppingCartMenu.Start()
                 );
-
                 // HOME → exit
                 if (!_state.InSidebar &&
                     !_state.InOffers &&
@@ -497,18 +322,14 @@ public class ShopMenu
             else if (_state.InProducts)
             {
                 await _navHandler.HandleProductsNavigation(
-                _state,
-                action,
-                searchResults,
-                 modalVariants);
+                    _state,
+                    action,
+                    searchResults,
+                    modalVariants);
             }
-
             await Task.Delay(16);
         }
-        
         Console.Clear();
     }
-    
-    
 }
 
