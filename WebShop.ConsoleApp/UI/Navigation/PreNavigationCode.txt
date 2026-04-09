@@ -1,0 +1,359 @@
+﻿här har jag sparat kod som kommer från ShopMenu.cs och nu ligger i ShopNavigationHandler.cs  och ShopModalNavigationHandler.cs
+detta är sparat utifall något "går sönder" under merge
+
+//private async Task HandleSidebarNavigation(NavigationAction action)
+    //{
+        
+  
+    //    // DROPDOWN AKTIV
+        
+    //    if (_state.CategoriesOpen && _state.SelectedSidebarIndex == 1)
+    //    {
+    //        switch (action)
+    //        {
+    //            case NavigationAction.Up:
+    //                if (_state.SelectedCategoryIndex > 0)
+    //                    _state.SelectedCategoryIndex--;
+    //                break;
+
+    //            case NavigationAction.Down:
+    //                if (_state.SelectedCategoryIndex < categories.Length - 1)
+    //                    _state.SelectedCategoryIndex++;
+    //                break;
+
+    //            case NavigationAction.Select:
+    //                _state.SelectedCategory = categories[_state.SelectedCategoryIndex];
+    //                _state.CategoryActive = true;
+
+    //                await LoadCategoryProducts(_state.SelectedCategory);
+
+    //                _state.CategoriesOpen = false;     // stäng dropdown
+    //                _state.InSidebar = false;
+    //                _state.InProducts = true;
+    //                _state.InOffers = false;
+
+    //                _state.ProductScrollOffset = 0;
+    //                _state.SelectedProductIndex = 0;
+    //                break;
+
+    //            case NavigationAction.Back:
+    //            case NavigationAction.Left:
+    //                _state.CategoriesOpen = false;     // stäng dropdown
+    //                break;
+    //        }
+
+    //        return;
+    //    }
+
+    //    // VANLIG SIDEBAR
+        
+    //    switch (action)
+    //    {
+    //        case NavigationAction.Up:
+    //            if (_state.SelectedSidebarIndex > 0)
+    //                _state.SelectedSidebarIndex--;
+    //            break;
+
+    //        case NavigationAction.Down:
+    //            if (_state.SelectedSidebarIndex < sidebarOptions.Length - 1)
+    //                _state.SelectedSidebarIndex++;
+    //            break;
+
+    //        case NavigationAction.Right:
+    //            _state.InSidebar = false;
+    //            _state.InOffers = !_state.CategoryActive;
+    //            _state.InProducts = _state.CategoryActive;
+    //            break;
+
+    //        case NavigationAction.Select:
+                
+                
+    //            //  SALE
+                
+    //            if (_state.SelectedSidebarIndex == 0)
+    //            {
+    //                _state.SaleActive = true;
+    //                _state.CategoryActive = false;
+
+    //                _state.OfferScrollOffset = 0; 
+    //                _state.SelectedOfferIndex = 0;
+
+    //                _state.InSidebar = false;
+    //                _state.InOffers = true;
+    //                _state.InProducts = false;
+
+    //                await LoadOffers();
+    //                return;
+    //            }
+
+                
+    //            //  CATEGORIES
+                
+    //            if (_state.SelectedSidebarIndex == 1)
+    //            {
+    //                _state.CategoriesOpen = !_state.CategoriesOpen;
+    //                _state.SelectedCategoryIndex = 0;
+    //                return;
+    //            }
+
+                
+    //            // HOME PAGE
+                
+    //            if (_state.SelectedSidebarIndex == 2)
+    //            {
+    //                //  reset ALL state
+    //                _state.SaleActive = false;
+    //                _state.CategoryActive = false;
+    //                _state.CategoriesOpen = false;
+
+    //                _state.InOffers = false;
+    //                _state.InProducts = false;
+    //                _state.InSidebar = false;
+    //                _state.InModal = false;
+
+    //                return; // lämnar Start()
+    //            }
+
+
+    //            // SHOPPING CART
+
+    //            if (_state.SelectedSidebarIndex == 3)
+    //            {
+    //                await _shoppingCartMenu.Start();
+    //                return;
+    //            }
+    //            //  SEARCH
+    //            if (_state.SelectedSidebarIndex == 4)
+    //            {
+    //                //  Stäng ALLA andra lägen
+    //                _state.SaleActive = false;
+    //                _state.CategoryActive = false;
+    //                _state.CategoriesOpen = false;
+
+    //                _state.InModal = false;
+
+    //                //  Aktivera search
+    //                _state.SearchActive = true;
+    //                _state.SearchTyping = true;
+
+    //                //  Reset input & resultat
+    //                _state.SearchQuery = "";
+    //                searchResults.Clear();
+
+    //                //  Reset navigation
+    //                _state.SelectedProductIndex = 0;
+    //                _state.ProductScrollOffset = 0;
+
+    //                //  Lämna andra vyer
+    //                _state.InSidebar = false;
+    //                _state.InOffers = false;
+    //                _state.InProducts = false;
+
+    //                return;
+    //            }
+                
+    //            break;
+    //    }
+    //}
+
+
+    //private async Task HandleProductsNavigation(NavigationAction action)
+    //{
+    //    var list = _state.SearchActive
+    //        ? searchResults
+    //        : (_state.CategoryActive ? _state.FilteredProducts : _state.Products);
+
+    //    if (list.Count == 0)
+    //        return;
+
+    //    int cols = 3;
+
+    //    switch (action)
+    //    {
+    //        case NavigationAction.Left:
+    //            _state.InSidebar = true;
+    //            _state.InProducts = false;
+    //            break;
+                
+    //        case NavigationAction.Right:
+    //            if (_state.SelectedProductIndex % cols < cols - 1 &&
+    //                _state.SelectedProductIndex < list.Count - 1)
+    //            {
+    //                _state.SelectedProductIndex++;
+    //            }
+    //            break;
+                
+    //        case NavigationAction.Up:
+
+    //            //  gå upp till _state.Offers
+    //            if (!_state.CategoryActive && !_state.SaleActive &&
+    //                _state.SelectedProductIndex < cols &&
+    //                _state.ProductScrollOffset == 0)
+    //            {
+    //                _state.InOffers = true;
+    //                _state.SelectedOfferIndex = 0;
+    //                return;
+    //            }
+
+    //            if (_state.SelectedProductIndex - cols >= 0)
+    //                _state.SelectedProductIndex -= cols;
+
+    //            if (_state.SelectedProductIndex < _state.ProductScrollOffset)
+    //                _state.ProductScrollOffset -= cols;
+
+    //            if (_state.ProductScrollOffset < 0)
+    //                _state.ProductScrollOffset = 0;
+    //            break;
+
+    //        case NavigationAction.Down:
+
+    //            if (_state.SelectedProductIndex + cols < list.Count)
+    //                _state.SelectedProductIndex += cols;
+
+    //            int startY = _state.CategoryActive ? 6 : 20;
+    //            int visibleRows = (Console.WindowHeight - startY) / 4;
+    //            int maxVisibleItems = visibleRows * cols;
+
+    //            if (_state.SelectedProductIndex >= _state.ProductScrollOffset + maxVisibleItems)
+    //                _state.ProductScrollOffset += cols;
+
+    //            break;
+
+    //        case NavigationAction.Select:
+
+    //            if (_state.SelectedProductIndex < 0 || _state.SelectedProductIndex >= list.Count)
+    //                return;
+
+    //            _state.ModalProduct = list[_state.SelectedProductIndex];
+
+    //            modalVariants = (await _repo.GetAllAsync())
+    //                .Where(p => p.Name == _state.ModalProduct.Name)
+    //                .OrderBy(p => p.Size)
+    //                .ToList();
+
+    //            _state.SelectedSizeIndex = 0;
+    //            _state.SelectedModalButton = 0;
+    //            sizeErrorShown = false;
+
+    //            _state.SelectedSize = null; 
+
+    //            _state.InModal = true;
+    //            break;
+    //    }
+    //}
+
+    //private async Task HandleModalNavigation(NavigationAction action)
+    //{
+    //    switch (action)
+    //    {
+    //        case NavigationAction.Select:
+
+    //            // välj storlek
+    //            if (_state.SelectedModalButton == 0)
+    //            {
+    //                _state.SelectedSize = _state.SelectedSizeIndex;
+    //                return;
+    //            }
+
+    //            // Add to cart
+    //            if (_state.SelectedModalButton == 1)
+    //            {
+    //                if (_state.SelectedSize == null)
+    //                {
+    //                    TriggerSizeError();
+    //                    return;
+    //                }
+
+    //                var selected = modalVariants[_state.SelectedSize.Value];
+
+    //                if (selected.Inventory == 0)
+    //                {
+    //                    TriggerSizeError();
+    //                    return;
+    //                }
+
+    //                _cartService.AddToCart(selected, 1);
+
+    //                Console.Clear();
+    //                Console.WriteLine($"Added {selected.Name} ({selected.Size})");
+    //                _nav.GetAction();
+
+    //                ResetModal();
+    //            }
+
+    //            // Back-knappen
+    //            if (_state.SelectedModalButton == 2)
+    //                ResetModal();
+
+    //            break;
+
+    //        case NavigationAction.Back:
+    //            ResetModal();
+    //            break;
+
+    //        case NavigationAction.Up:
+    //            if (_state.SelectedModalButton == 0 && _state.SelectedSizeIndex > 0)
+    //                _state.SelectedSizeIndex--;
+    //            else if (_state.SelectedModalButton > 0)
+    //                _state.SelectedModalButton--;
+    //            break;
+
+    //        case NavigationAction.Down:
+    //            if (_state.SelectedModalButton == 0 && _state.SelectedSizeIndex < modalVariants.Count - 1)
+    //                _state.SelectedSizeIndex++;
+    //            else if (_state.SelectedModalButton < 2)
+    //                _state.SelectedModalButton++;
+    //            break;
+
+    //        case NavigationAction.Right:
+    //            if (_state.SelectedModalButton == 0)
+    //                _state.SelectedModalButton = 1;
+    //            break;
+
+    //        case NavigationAction.Left:
+    //            if (_state.SelectedModalButton > 0)
+    //                _state.SelectedModalButton = 0;
+    //            break;
+    //    }
+    //}
+
+        //private void Highlight()
+    //{
+    //    Console.BackgroundColor = ConsoleColor.White;
+    //    Console.ForegroundColor = ConsoleColor.Black;
+    //}
+        //private void DrawHighlightedText(string text, string query, int x, int y, int width)
+    //{
+    //    Console.SetCursorPosition(x, y);
+
+    //    if (string.IsNullOrWhiteSpace(query))
+    //    {
+    //        Console.WriteLine(text.PadRight(width));
+    //        return;
+    //    }
+
+    //    int index = text.IndexOf(query, StringComparison.OrdinalIgnoreCase);
+
+    //    if (index < 0)
+    //    {
+    //        Console.WriteLine(text.PadRight(width));
+    //        return;
+    //    }
+
+    //    // före match
+    //    Console.Write(text.Substring(0, index));
+
+    //    //  highlight match
+    //    Console.ForegroundColor = ConsoleColor.Yellow;
+    //    Console.Write(text.Substring(index, query.Length));
+    //    Console.ResetColor();
+
+    //    // efter match
+    //    Console.Write(text.Substring(index + query.Length));
+
+    //    // fyll resten
+    //    int remaining = width - text.Length;
+    //    if (remaining > 0)
+    //        Console.Write(new string(' ', remaining));
+    //}
+   
