@@ -13,5 +13,6 @@ namespace _1.WebShop.Core.Interfaces
         Task AddAsync(Product product);
         Task UpdateAsync(Product product);
         Task DeleteAsync(int id);
+        Task AddProductAsync(Product newProduct);
     }
 }

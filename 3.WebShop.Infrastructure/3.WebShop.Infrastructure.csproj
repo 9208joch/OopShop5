@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\1.WebShop.Core\1.WebShop.Core.csproj" />
+    <ProjectReference Include="..\2.WebShop.Application\2.WebShop.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
