@@ -5,6 +5,7 @@ using _1.WebShop.Application.Services;
 using _1.WebShop.Core.Entities;
 using _1.WebShop.Core.Interfaces;
 using _2.WebShop.Application.Services;
+using _4.WebShop.ConsoleApp.UI;
 using UI;
 using WebShop.ConsoleApp.UI.Navigation;
 using WebShop.ConsoleApp.UI.Rendering;

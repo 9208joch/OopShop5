@@ -13,5 +13,9 @@ namespace _1.WebShop.Core.Entities
         public decimal TotalPrice { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime OrderDate { get; set; }
+
+        
+        public int CustomerId { get; set; }
     }
 }
