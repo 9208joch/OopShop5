@@ -1,15 +1,17 @@
-﻿using _1.WebShop.Core.Interfaces;
-using _1.WebShop.Application;
+﻿using _1.WebShop.Application;
+using _1.WebShop.Application.Services;
+using _1.WebShop.Core.Interfaces;
+using _2.WebShop.Application.Services;
+using _2.WebShop.Application.UseCases;
 using _3.WebShop.Infrastructure.DbContext;
 using _3.WebShop.Infrastructure.Payments;
 using _3.WebShop.Infrastructure.Repositories;
 using _3.WebShop.Infrastructure.Shipping;
+using _4.WebShop.ConsoleApp.UI.Flows;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using UI;
 using WebShop.ConsoleApp.UI;
-using _2.WebShop.Application.Services;
-using _1.WebShop.Application.Services;
 
 var services = new ServiceCollection();
 
@@ -22,6 +24,9 @@ services.AddScoped<IProductRepository, ProductRepository>();
 services.AddSingleton<CartService>();
 services.AddScoped<ShoppingCartMenu>();
 services.AddScoped<CheckoutService>();
+
+services.AddScoped<CheckoutFlow>();
+services.AddScoped<ConsoleCheckoutFlow>();
 
 services.AddScoped<IPaymentMethod, CardPayment>();
 services.AddScoped<IPaymentMethod, SwishPayment>();
