@@ -30,6 +30,7 @@ services.AddScoped<IPaymentMethod, SwishPayment>();
 
 services.AddScoped<IShippingOption, StandardShipping>();
 services.AddScoped<IShippingOption, ExpressShipping>();
+services.AddScoped<IShippingOption, NoShippingPickupStore>();
 services.AddScoped<AdminMenu>();
 services.AddScoped<ICustomerRepository, CustomerRepository>();
 

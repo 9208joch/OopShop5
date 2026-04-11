@@ -10,6 +10,8 @@ namespace _1.WebShop.Core.Entities
 
         public string Address { get; set; }
 
+        public string Zipcode { get; set; }
+
 
     }
 }

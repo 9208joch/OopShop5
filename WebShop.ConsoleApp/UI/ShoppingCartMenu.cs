@@ -111,18 +111,18 @@ namespace UI
 
             var summary = _checkoutService.CreateSummary(shipping);
 
-            Console.WriteLine("\n=== ORDER SUMMARY ===");
+            ShowSummary(cart, summary);
 
-            foreach (var item in cart.Items)
+            Console.WriteLine("\nPress ENTER to continue to payment or BACKSPACE to cancel...");
+
+            var action = _consoleNavigationService.GetAction();
+
+            if (action == NavigationAction.Back)
             {
-                Console.WriteLine($"{item.Product.Name} x {item.Quantity}");
+                Console.WriteLine("Checkout cancelled.");
+                Console.ReadKey();
+                return;
             }
-
-            Console.WriteLine("----------------------");
-            Console.WriteLine($"Subtotal (ex VAT): {summary.SubtotalExVat:F2} kr");
-            Console.WriteLine($"VAT (25%): {summary.Vat:F2} kr");
-            Console.WriteLine($"Shipping: {summary.ShippingPrice:F2} kr");
-            Console.WriteLine($"TOTAL: {summary.Total:F2} kr");
 
             var paymentMethod = SelectPaymentMethod();
 
@@ -164,6 +164,23 @@ namespace UI
             Console.WriteLine("Order completed");
 
         }
+
+        private void ShowSummary(ShoppingCart cart, CheckoutSummary summary)
+        {
+            Console.WriteLine("\n=== ORDER SUMMARY ===");
+
+            foreach (var item in cart.Items)
+            {
+                Console.WriteLine($"{item.Product.Name} x {item.Quantity}");
+            }
+
+            Console.WriteLine("----------------------");
+            Console.WriteLine($"Subtotal (ex VAT): {summary.SubtotalExVat:F2} kr");
+            Console.WriteLine($"VAT (25%): {summary.Vat:F2} kr");
+            Console.WriteLine($"Shipping: {summary.ShippingPrice:F2} kr");
+            Console.WriteLine($"TOTAL: {summary.Total:F2} kr");
+        }
+
 
         private void DrawMenu(int selectedIndex)
         {
@@ -280,20 +297,58 @@ namespace UI
 
         private ShippingInfo GetShippingInfo()
         {
-            Console.WriteLine("\n=== SHIPPING INFO ===");
+            Console.Clear();
+            Console.WriteLine("=== SHIPPING INFO ===\n");
 
-            Console.Write("Name: ");
-            var name = Console.ReadLine();
+            string name = GetValidatedInput(
+                "Name",
+                "Example: Anders Andersson",
+                input => !string.IsNullOrWhiteSpace(input),
+                "Name cannot be empty."
+            );
 
-            Console.Write("Address: ");
-            var address = Console.ReadLine();
+            string address = GetValidatedInput(
+                "Address",
+                "Example: Exempelvägen 14",
+                input => !string.IsNullOrWhiteSpace(input),
+                "Address cannot be empty."
+            );
+
+            string zipcode = GetValidatedInput(
+                "Zip code",
+                "Example: 45130",
+                input => !string.IsNullOrWhiteSpace(input) && input.All(char.IsDigit) && input.Length == 5,
+                "Zip code must be 5 digits."
+            );
 
             return new ShippingInfo
             {
                 Name = name,
-                Address = address
+                Address = address,
+                Zipcode = zipcode
             };
         }
+
+        private string GetValidatedInput(string label, string example, Func<string, bool> validator, string errorMessage)
+        {
+            while (true)
+            {
+                Console.WriteLine($"\n{label}");
+                Console.WriteLine(example);
+                Console.Write(": ");
+
+                var input = Console.ReadLine();
+
+                if (validator(input))
+                    return input;
+
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(errorMessage);
+                Console.ResetColor();
+            }
+        }
+
+
 
         private IPaymentMethod SelectPaymentMethod()
         {
