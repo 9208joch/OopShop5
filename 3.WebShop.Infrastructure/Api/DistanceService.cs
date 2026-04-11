@@ -2,58 +2,118 @@
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using _1.WebShop.Application;
+using _2.WebShop.Application;
+using System.Text.Json;
+using _1.WebShop.Core.Interfaces;
 
-
-namespace _1.WebShop.Application.Services
+namespace _3.WebShop.Infrastructure.Api
 {
     public class DistanceService : IDistanceService
     {
-        // This service calculates the distance from the customer's address to the store using an external API.
-      
         private readonly HttpClient _httpClient;
-        private const string Apikey = "RPKYd2GNC4FS8QE6fohAf2HMw75orGXtiWaIJTZx";
-        private const string StoreAddress = " Kungsgatan 4 451 30 Uddevalla";
+
+        private const string ApiKey = "DIN_API_KEY_HÄR";/////////////////////////////////////////////////////////////////////////
+        private const string StoreAddress = "Kungsgatan 4 451 30 Uddevalla";
 
         public DistanceService(HttpClient httpClient)
         {
-            // In a real application, the API key and store address would likely come from configuration.
-          
             _httpClient = httpClient;
-            _httpClient.DefaultRequestHeaders.Add("X-Api-Key", Apikey);
         }
 
-        public async Task<double?> GetDistanceToStoreAsync(string customerAddress)
+        public async Task<double?> GetDistanceToStoreAsync(string _)
         {
-            // This method calls an external API to get the distance from the customer's address to the store.
-
-            var url = $"https://api.api-ninjas.com/v1/distance?address1={Uri.EscapeDataString(customerAddress)}&address2={Uri.EscapeDataString(StoreAddress)}";
-           
             try
             {
-                // Call the external API to get the distance. The actual URL and parameters would depend on the API's requirements.
-                var response = await _httpClient.GetAsync(url);
-                if (response.IsSuccessStatusCode)
-                {
-                    // If the API call is successful, we read the response and parse the distance.
-                    var rawJson = await response.Content.ReadAsStringAsync();
+                var user = await GetUserLocation();
+                var store = await GetCoordinates(StoreAddress);
 
-                    // rawJson will be something like: {"distance": 123.45}
-                    Console.WriteLine("API-SVAR: " + rawJson);
-                
-                    // after reading the raw JSON, we can deserialize it into our DistanceResponse class.
-                }
+                if (user == null || store == null)
+                    return null;
+
+                return CalculateDistance(user.Value, store.Value);
             }
             catch
             {
-                // if something goes wrong, we catch the exception and return null 
+                return null;
             }
-            return null;
         }
-        public class DistanceResponse
+
+        //  1. Hämta användarens position via IP
+        private async Task<(double lat, double lon)?> GetUserLocation()
         {
-            // This class represents the response from the distance API.
-            public double Distance { get; set; }
+            try
+            {
+                var res = await _httpClient.GetFromJsonAsync<IpResponse>("http://ip-api.com/json/");
+
+                if (res == null || res.Status != "success")
+                    return null;
+
+                return (res.Lat, res.Lon);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        //  2. Adress → koordinater
+        private async Task<(double lat, double lon)?> GetCoordinates(string address)
+        {
+            var url = $"https://api.api-ninjas.com/v1/geocoding?address={Uri.EscapeDataString(address)}";
+
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("X-Api-Key", ApiKey);
+
+            var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var json = await response.Content.ReadAsStringAsync();
+            var data = JsonSerializer.Deserialize<List<GeoResponse>>(json);
+
+            var first = data?.FirstOrDefault();
+
+            if (first == null)
+                return null;
+
+            return (first.Latitude, first.Longitude);
+        }
+
+        //  3. Avstånd (Haversine)
+        private double CalculateDistance((double lat, double lon) a, (double lat, double lon) b)
+        {
+            double R = 6371;
+
+            double dLat = ToRad(b.lat - a.lat);
+            double dLon = ToRad(b.lon - a.lon);
+
+            double lat1 = ToRad(a.lat);
+            double lat2 = ToRad(b.lat);
+
+            double x = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                       Math.Sin(dLon / 2) * Math.Sin(dLon / 2) *
+                       Math.Cos(lat1) * Math.Cos(lat2);
+
+            double c = 2 * Math.Atan2(Math.Sqrt(x), Math.Sqrt(1 - x));
+
+            return R * c;
+        }
+
+        private double ToRad(double deg) => deg * (Math.PI / 180);
+
+        // Models
+        private class IpResponse
+        {
+            public string Status { get; set; }
+            public double Lat { get; set; }
+            public double Lon { get; set; }
+        }
+
+        private class GeoResponse
+        {
+            public double Latitude { get; set; }
+            public double Longitude { get; set; }
         }
     }
 }

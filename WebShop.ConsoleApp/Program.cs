@@ -1,5 +1,9 @@
-﻿using _1.WebShop.Core.Interfaces;
-using _1.WebShop.Application;
+﻿using System.Threading.Tasks;
+using _2.WebShop.Application;
+using _2.WebShop.Application.Services;
+using _1.WebShop.Core.Interfaces;
+using _2.WebShop.Application.Services;
+using _3.WebShop.Infrastructure.Api;
 using _3.WebShop.Infrastructure.DbContext;
 using _3.WebShop.Infrastructure.Payments;
 using _3.WebShop.Infrastructure.Repositories;
@@ -8,10 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using UI;
 using WebShop.ConsoleApp.UI;
-using _2.WebShop.Application.Services;
-using _1.WebShop.Application.Services;
-
-using System.Threading.Tasks;
 
 var services = new ServiceCollection();
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
-using _1.WebShop.Application;           
-using _1.WebShop.Application.Services;
+using _2.WebShop.Application;           
 using _1.WebShop.Core.Entities;
 using _1.WebShop.Core.Interfaces;
 using _2.WebShop.Application.Services;
@@ -25,14 +24,15 @@ public class Menu
     private readonly CartService _cartService;
     private readonly ShoppingCartMenu _shoppingCartMenu;   //NK...
 
-    
+
     public Menu(
     IProductRepository repo,
     ConsoleNavigationService nav,
     ShopMenu shop,
     ShoppingCartMenu shoppingCartMenu,
     AdminMenu adminMenu,
-    CartService cartService) 
+    CartService cartService,
+    IDistanceService distanceService)  
     {
         _repo = repo;
         _nav = nav;
@@ -40,6 +40,7 @@ public class Menu
         _shoppingCartMenu = shoppingCartMenu;
         _adminMenu = adminMenu;
         _cartService = cartService;
+        _distanceService = distanceService; 
     }
     private readonly IProductRepository _repo;
 
@@ -56,7 +57,7 @@ public class Menu
     private async Task DrawStoreInfo()
     {
         string address = "Kungsgatan 4 451 30 Uddevalla";
-
+        // här skall avståndet visas
         int center = Console.WindowWidth / 2;
 
         // Adress
