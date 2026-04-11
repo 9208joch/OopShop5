@@ -11,6 +11,8 @@ using WebShop.ConsoleApp.UI;
 using _2.WebShop.Application.Services;
 using _1.WebShop.Application.Services;
 
+using System.Threading.Tasks;
+
 var services = new ServiceCollection();
 
 services.AddScoped<ShopMenu>();
@@ -51,8 +53,8 @@ using (var scope = provider.CreateScope())
         await concreteRepo.SeedAsync();
     }
 
-    var menu = scope.ServiceProvider.GetRequiredService<Menu>();
-    await menu.Start();
+   var menu = scope.ServiceProvider.GetRequiredService<Menu>();
+   await menu.Start();
 
 }
 
@@ -63,27 +65,23 @@ namespace WebShop.ConsoleApp
     {
         static async Task Main(string[] args)
         {
-            // sätt ihop alla kopplingar i en service collection
-            var servicesCollection = new ServiceCollection();
+            var services = new ServiceCollection();
 
-            // koppla database
-            servicesCollection.AddDbContext<WebShopContext>();
+            services.AddDbContext<WebShopContext>();
+            services.AddScoped<IProductRepository, ProductRepository>();
 
-            // koppla ihop repository-klasserna med service
-            servicesCollection.AddScoped<IProductRepository, ProductRepository>();
-            servicesCollection.AddScoped<ICustomerRepository, ICustomerRepository>();
+            services.AddScoped<_1.WebShop.Core.Interfaces.ICustomerRepository,
+                _3.WebShop.Infrastructure.Repositories.CustomerRepository>();
+            
+            services.AddScoped<AdminMenu>();
+            services.AddSingleton<ConsoleNavigationService>();
 
-            servicesCollection.AddScoped<AdminMenu>();
+            // 1. Bygg ihop alla services
+            var serviceProvider = services.BuildServiceProvider();
 
-            // koppla ihop nya menyn med de nya repository-klasserna
-            var serviceProvider = servicesCollection.BuildServiceProvider();
-
-
-            // kör igång adminmenyn
+            // 3. Starta din Admin-meny!
             var adminMenu = serviceProvider.GetRequiredService<AdminMenu>();
             await adminMenu.ShowMenuAsync();
-
         }
-    } 
+    }
 }
-

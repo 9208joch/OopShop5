@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Linq;
 using System.Threading.Tasks;
+using _3.WebShop.Infrastructure.DbContext;
 
 namespace UI
 {
@@ -21,15 +22,20 @@ namespace UI
         private readonly CheckoutService _checkoutService;
         private readonly ConsoleNavigationService _consoleNavigationService;
 
+        private readonly WebShopContext _Context;
+
+
+
         public ShoppingCartMenu(CartService cartService, 
             IEnumerable<IPaymentMethod> paymentMethods,
-            IEnumerable<IShippingOption> shippingOptions, CheckoutService checkoutService, ConsoleNavigationService consoleNavigationService)
+            IEnumerable<IShippingOption> shippingOptions, CheckoutService checkoutService, ConsoleNavigationService consoleNavigationService, WebShopContext context)
         {
             _cartService = cartService;
             _paymentMethods = paymentMethods;
             _shippingOptions = shippingOptions;
             _checkoutService = checkoutService;
             _consoleNavigationService = consoleNavigationService;
+            _Context = context;
         }
 
         public async Task Start()
@@ -76,6 +82,23 @@ namespace UI
                 return;
             }
 
+            // Fråga Efter Kunden 
+            Console.WriteLine("\nKund-Id : ");
+            if (!int.TryParse(Console.ReadLine(), out int customerId))
+            {
+                Console.WriteLine("");
+                Console.ReadKey();
+                return;
+            }
+
+            var customer = await _Context.Customers.FindAsync(customerId);
+            if (customer == null)
+            {
+                Console.WriteLine("customer ");
+                Console.ReadKey();
+                return;
+            }
+
             var shippingInfo = GetShippingInfo();
             var shipping = SelectShipping();
 
@@ -112,6 +135,31 @@ namespace UI
 
 
             await _checkoutService.CompleteOrder(paymentMethod, summary.Total);
+
+
+            //  
+            var newOrder = new Order
+            {
+                CustomerId = customer.Id,
+                OrderDate = DateTime.Now,
+                CreatedAt = DateTime.Now,
+                TotalPrice = summary.Total,
+                Rows = new List<OrderRow>()
+            };
+            foreach (var item in cart.Items)
+            {
+                newOrder.Rows.Add(new OrderRow { ProductId = item.Product.Id, Quantity = item.Quantity });
+            }
+
+            _Context.Orders.Add(newOrder);
+            await _Context.SaveChangesAsync();
+
+            foreach (var item in cart.Items.ToList())
+            {
+                // töma varuKorgen för kunden
+                _cartService.RemoveFromCart(item.Product);
+            }
+
 
             Console.WriteLine("Order completed");
 
