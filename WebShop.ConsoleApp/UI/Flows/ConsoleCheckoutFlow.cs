@@ -1,4 +1,5 @@
 ﻿using _1.WebShop.Core.Interfaces;
+using _2.WebShop.Application;
 using _2.WebShop.Application.UseCases;
 using _4.WebShop.ConsoleApp.UI.Forms;
 using _4.WebShop.ConsoleApp.UI.Rendering;
@@ -60,9 +61,19 @@ namespace _4.WebShop.ConsoleApp.UI.Flows
             var payment = SelectPaymentMethod();
             if (payment == null) return;
 
-            await _checkoutFlow.CompleteOrder(payment, summary.Total);
+           Result result = await _checkoutFlow.CompleteOrder(payment, summary.Total);
 
-            Console.WriteLine("Order completed!");
+            if (!result.Success)
+            {
+                Console.WriteLine(result.Message);
+            }
+            else
+            {
+                Console.WriteLine(result.Message);
+            }
+                    
+
+            //Console.WriteLine("Order completed!");
         }
 
         private IShippingOption SelectShipping()

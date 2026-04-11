@@ -15,8 +15,15 @@ namespace _2.WebShop.Application
             Message = message;
         }
 
-        public static Result Ok(string message) => new(true, message);
-        public static Result Fail(string message) => new(false, message);
+        public static Result Ok(string message)
+        {
+            return new Result(true, message);
+        }
+
+        public static Result Fail(string message)
+        {
+            return new Result(false, message);
+        }
 
     }
 }

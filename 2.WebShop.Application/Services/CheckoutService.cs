@@ -39,7 +39,7 @@ namespace _2.WebShop.Application.Services
             };
         }
 
-        public async Task CompleteOrder(IPaymentMethod paymentMethod, decimal totalAmount)
+        public async Task<Result> CompleteOrder(IPaymentMethod paymentMethod, decimal totalAmount)
         {
             var cart = _cartService.GetCart();
 
@@ -48,7 +48,10 @@ namespace _2.WebShop.Application.Services
                 var product = await _productRepository.GetByIdAsync(item.Product.Id);
 
                 if (product.Inventory < item.Quantity)
-                    throw new Exception($"Not enough stock for {product.Name}");
+                {
+                    return Result.Fail($"Not enough stock for {product.Name}");
+                }
+
 
                 product.Inventory -= item.Quantity;
 
@@ -58,6 +61,9 @@ namespace _2.WebShop.Application.Services
             paymentMethod.Pay(totalAmount);
 
             _cartService.ClearCart();
+
+            return Result.Ok("Order completed successfully");
+
         }
 
 
