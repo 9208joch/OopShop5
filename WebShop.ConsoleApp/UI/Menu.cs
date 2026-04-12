@@ -23,6 +23,7 @@ public class Menu
     private readonly CommonRenderer _commonRenderer = new();
     private readonly CartService _cartService;
     private readonly ShoppingCartMenu _shoppingCartMenu;   //NK...
+    private double? _cachedDistance = null;
 
 
     public Menu(
@@ -57,36 +58,37 @@ public class Menu
     private async Task DrawStoreInfo()
     {
         string address = "Kungsgatan 4 451 30 Uddevalla";
-        // här skall avståndet visas
         int center = Console.WindowWidth / 2;
 
-        // Adress
+        //  Adress
         Console.SetCursorPosition(center - address.Length / 2, 4);
         Console.WriteLine(address);
 
-        // Avstånd (test-adress tills vidare)
-        if (_distanceService != null)
+        if (_distanceService == null)
+            return;
+
+        try
         {
-            try
+            //  Hämta endast en gång (cache)
+            if (_cachedDistance == null)
             {
-                string customerAddress = "Stockholm"; // placeholder<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-                var distance = await _distanceService.GetDistanceToStoreAsync(customerAddress);
-
-                string text = distance != null
-                    ? $"Distance to store: {Math.Round(distance.Value, 1)} km"
-                    : "Distance unavailable";
-
-                Console.SetCursorPosition(center - text.Length / 2, 5);
-                Console.WriteLine(text);
+                string customerAddress = "Stockholm"; // placeholder
+                _cachedDistance = await _distanceService.GetDistanceToStoreAsync(customerAddress);
             }
-            catch
-            {
-                string error = "Distance unavailable";
 
-                Console.SetCursorPosition(center - error.Length / 2, 5);
-                Console.WriteLine(error);
-            }
+            string text = _cachedDistance != null
+                ? $"Distance to store: {Math.Round(_cachedDistance.Value, 1)} km"
+                : "Distance unavailable";
+
+            Console.SetCursorPosition(center - text.Length / 2, 5);
+            Console.WriteLine(text);
+        }
+        catch
+        {
+            string error = "Distance unavailable";
+
+            Console.SetCursorPosition(center - error.Length / 2, 5);
+            Console.WriteLine(error);
         }
     }
     public async Task Start()

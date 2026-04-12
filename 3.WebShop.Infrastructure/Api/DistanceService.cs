@@ -12,8 +12,8 @@ namespace _3.WebShop.Infrastructure.Api
     {
         private readonly HttpClient _httpClient;
 
-        private const string ApiKey = "DIN_API_KEY_HÄR";/////////////////////////////////////////////////////////////////////////
-        private const string StoreAddress = "Kungsgatan 4 451 30 Uddevalla";
+        // Butikens koordinater (Uddevalla)
+        private readonly (double lat, double lon) _storeLocation = (58.3473, 11.9424);
 
         public DistanceService(HttpClient httpClient)
         {
@@ -24,13 +24,14 @@ namespace _3.WebShop.Infrastructure.Api
         {
             try
             {
-                var user = await GetUserLocation();
-                var store = await GetCoordinates(StoreAddress);
+                var userLocation = await GetUserLocation();
 
-                if (user == null || store == null)
+                // enligt uppgift pdf så skall det finnas "Http-klient till valfri API" vi använder därför IP-geolocation API för att hämta användarens position och beräknar sedan avstånd till vår butik med Haversine-formel.
+                // bristen att göra på detta vis är att den räknar från närmaste nod i mitt fall är detta en telefonstolpe så för mig så visar det ca 200m kortare en det faktist är
+                if (userLocation == null)
                     return null;
 
-                return CalculateDistance(user.Value, store.Value);
+                return CalculateDistance(userLocation.Value, _storeLocation);
             }
             catch
             {
@@ -38,17 +39,17 @@ namespace _3.WebShop.Infrastructure.Api
             }
         }
 
-        //  1. Hämta användarens position via IP
+        //  Hämta användarens position via IP
         private async Task<(double lat, double lon)?> GetUserLocation()
         {
             try
             {
-                var res = await _httpClient.GetFromJsonAsync<IpResponse>("http://ip-api.com/json/");
+                var response = await _httpClient.GetFromJsonAsync<IpResponse>("http://ip-api.com/json/");
 
-                if (res == null || res.Status != "success")
+                if (response == null || response.Status != "success")
                     return null;
 
-                return (res.Lat, res.Lon);
+                return (response.Lat, response.Lon);
             }
             catch
             {
@@ -56,40 +57,16 @@ namespace _3.WebShop.Infrastructure.Api
             }
         }
 
-        //  2. Adress → koordinater
-        private async Task<(double lat, double lon)?> GetCoordinates(string address)
-        {
-            var url = $"https://api.api-ninjas.com/v1/geocoding?address={Uri.EscapeDataString(address)}";
-
-            var request = new HttpRequestMessage(HttpMethod.Get, url);
-            request.Headers.Add("X-Api-Key", ApiKey);
-
-            var response = await _httpClient.SendAsync(request);
-
-            if (!response.IsSuccessStatusCode)
-                return null;
-
-            var json = await response.Content.ReadAsStringAsync();
-            var data = JsonSerializer.Deserialize<List<GeoResponse>>(json);
-
-            var first = data?.FirstOrDefault();
-
-            if (first == null)
-                return null;
-
-            return (first.Latitude, first.Longitude);
-        }
-
-        //  3. Avstånd (Haversine)
+        //  Beräkna avstånd (Haversine-formel)
         private double CalculateDistance((double lat, double lon) a, (double lat, double lon) b)
         {
-            double R = 6371;
+            const double earthRadiusKm = 6371;
 
-            double dLat = ToRad(b.lat - a.lat);
-            double dLon = ToRad(b.lon - a.lon);
+            double dLat = ToRadians(b.lat - a.lat);
+            double dLon = ToRadians(b.lon - a.lon);
 
-            double lat1 = ToRad(a.lat);
-            double lat2 = ToRad(b.lat);
+            double lat1 = ToRadians(a.lat);
+            double lat2 = ToRadians(b.lat);
 
             double x = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
                        Math.Sin(dLon / 2) * Math.Sin(dLon / 2) *
@@ -97,23 +74,20 @@ namespace _3.WebShop.Infrastructure.Api
 
             double c = 2 * Math.Atan2(Math.Sqrt(x), Math.Sqrt(1 - x));
 
-            return R * c;
+            return earthRadiusKm * c;
         }
 
-        private double ToRad(double deg) => deg * (Math.PI / 180);
+        private double ToRadians(double degrees)
+        {
+            return degrees * (Math.PI / 180);
+        }
 
-        // Models
+        //  API-svar
         private class IpResponse
         {
             public string Status { get; set; }
             public double Lat { get; set; }
             public double Lon { get; set; }
-        }
-
-        private class GeoResponse
-        {
-            public double Latitude { get; set; }
-            public double Longitude { get; set; }
         }
     }
 }
