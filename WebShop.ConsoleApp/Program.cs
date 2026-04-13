@@ -1,9 +1,9 @@
-﻿using _1.WebShop.Application;
-using _1.WebShop.Application.Services;
+﻿using _2.WebShop.Application;
 using _1.WebShop.Core.Interfaces;
 using _2.WebShop.Application.Services;
 using _2.WebShop.Application.UseCases;
 using _3.WebShop.Infrastructure.DbContext;
+using _3.WebShop.Infrastructure.Api;
 using _3.WebShop.Infrastructure.Payments;
 using _3.WebShop.Infrastructure.Repositories;
 using _3.WebShop.Infrastructure.Shipping;
