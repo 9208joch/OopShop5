@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Linq;
 using System.Threading.Tasks;
+using _3.WebShop.Infrastructure.DbContext;
 
 namespace UI
 {
@@ -16,6 +17,10 @@ namespace UI
         private readonly CartService _cartService;
         private readonly ConsoleNavigationService _consoleNavigationService;
         private readonly ConsoleCheckoutFlow _checkoutFlow;
+
+        private readonly WebShopContext _Context;
+
+
 
         public ShoppingCartMenu(CartService cartService, 
             ConsoleNavigationService consoleNavigationService, ConsoleCheckoutFlow checkoutFlow)

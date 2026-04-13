@@ -1,8 +1,6 @@
 ﻿using _1.WebShop.Core.Entities;
 using _1.WebShop.Core.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace _2.WebShop.Application.Services
 {
@@ -22,7 +20,7 @@ namespace _2.WebShop.Application.Services
 
         public async Task UpdateCustomerAsync(Customer customer)
         {
-            await _customerRepo.UpdateCustomerAsync(customer); 
+            await _customerRepo.UpdateCustomerAsync(customer);
         }
     }
 }

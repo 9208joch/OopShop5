@@ -45,7 +45,7 @@ namespace _2.WebShop.Application.Services
 
             foreach (var item in cart.Items)
             {
-                var product = await _productRepository.GetByIdAsync(item.Product.Id);
+                var product = await _productRepository.GetProductByIdAsync(item.Product.Id);
 
                 if (product.Inventory < item.Quantity)
                 {
@@ -55,7 +55,7 @@ namespace _2.WebShop.Application.Services
 
                 product.Inventory -= item.Quantity;
 
-                await _productRepository.UpdateAsync(product);
+                await _productRepository.UpdateProductAsync(product);
             }
 
             paymentMethod.Pay(totalAmount);

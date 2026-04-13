@@ -28,5 +28,8 @@ namespace _1.WebShop.Core.Entities
 
         [Range(0, int.MaxValue)]
         public int Inventory { get; set; }
+
+        public string Supplier { get; set; }
+        public int StockBalance { get; set; }
     }
 }
