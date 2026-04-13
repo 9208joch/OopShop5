@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using _3.WebShop.Infrastructure.DbContext;
 
@@ -11,9 +12,11 @@ using _3.WebShop.Infrastructure.DbContext;
 namespace _3.WebShop.Infrastructure.Migrations
 {
     [DbContext(typeof(WebShopContext))]
-    partial class WebShopContextModelSnapshot : ModelSnapshot
+    [Migration("20260409202607_UpdateProductColumns")]
+    partial class UpdateProductColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -89,7 +92,7 @@ namespace _3.WebShop.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("CustomerId")
+                    b.Property<int?>("CustomerId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("OrderDate")
@@ -185,9 +188,7 @@ namespace _3.WebShop.Infrastructure.Migrations
                 {
                     b.HasOne("_1.WebShop.Core.Entities.Customer", null)
                         .WithMany("Orders")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CustomerId");
                 });
 
             modelBuilder.Entity("_1.WebShop.Core.Entities.OrderRow", b =>

@@ -2,34 +2,32 @@
 using _1.WebShop.Core.Interfaces;
 using _2.WebShop.Application.Services;
 using _4.WebShop.ConsoleApp.UI;
+using _4.WebShop.ConsoleApp.UI.Flows;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Linq;
 using System.Threading.Tasks;
+using _3.WebShop.Infrastructure.DbContext;
 
 namespace UI
 {
     public class ShoppingCartMenu
     {
         private readonly CartService _cartService;
-       
-
-        private readonly IEnumerable<IPaymentMethod> _paymentMethods;
-        private readonly IEnumerable<IShippingOption> _shippingOptions;
-
-        private readonly CheckoutService _checkoutService;
         private readonly ConsoleNavigationService _consoleNavigationService;
+        private readonly ConsoleCheckoutFlow _checkoutFlow;
+
+        private readonly WebShopContext _Context;
+
+
 
         public ShoppingCartMenu(CartService cartService, 
-            IEnumerable<IPaymentMethod> paymentMethods,
-            IEnumerable<IShippingOption> shippingOptions, CheckoutService checkoutService, ConsoleNavigationService consoleNavigationService)
+            ConsoleNavigationService consoleNavigationService, ConsoleCheckoutFlow checkoutFlow)
         {
             _cartService = cartService;
-            _paymentMethods = paymentMethods;
-            _shippingOptions = shippingOptions;
-            _checkoutService = checkoutService;
             _consoleNavigationService = consoleNavigationService;
+            _checkoutFlow = checkoutFlow;
         }
 
         public async Task Start()
@@ -66,56 +64,6 @@ namespace UI
             }
         }
 
-        private async Task Checkout()
-        {
-            var cart = _cartService.GetCart();
-
-            if (!cart.Items.Any())
-            {
-                Console.WriteLine("Cart is empty.");
-                return;
-            }
-
-            var shippingInfo = GetShippingInfo();
-            var shipping = SelectShipping();
-
-            if (shipping == null)
-            {
-                Console.WriteLine("Shipping selection cancelled.");
-                Console.ReadKey();
-                return;
-            }
-
-            var summary = _checkoutService.CreateSummary(shipping);
-
-            Console.WriteLine("\n=== ORDER SUMMARY ===");
-
-            foreach (var item in cart.Items)
-            {
-                Console.WriteLine($"{item.Product.Name} x {item.Quantity}");
-            }
-
-            Console.WriteLine("----------------------");
-            Console.WriteLine($"Subtotal (ex VAT): {summary.SubtotalExVat:F2} kr");
-            Console.WriteLine($"VAT (25%): {summary.Vat:F2} kr");
-            Console.WriteLine($"Shipping: {summary.ShippingPrice:F2} kr");
-            Console.WriteLine($"TOTAL: {summary.Total:F2} kr");
-
-            var paymentMethod = SelectPaymentMethod();
-
-            if (paymentMethod == null)
-            {
-                Console.WriteLine("Payment selection cancelled.");
-                Console.ReadKey();
-                return;
-            }
-
-
-            await _checkoutService.CompleteOrder(paymentMethod, summary.Total);
-
-            Console.WriteLine("Order completed");
-
-        }
 
         private void DrawMenu(int selectedIndex)
         {
@@ -166,7 +114,7 @@ namespace UI
                     break;
 
                 case 3:
-                    await Checkout();
+                    await _checkoutFlow.Run();
                     break;
 
                 case 4:
@@ -214,56 +162,6 @@ namespace UI
             }
         }
 
-        private IShippingOption SelectShipping()
-        {
-            var options = _shippingOptions.ToList();
-
-            var selector = new ListSelector<IShippingOption>(_consoleNavigationService);
-
-            var selected = selector.Select(
-                options,
-                s => $"{s.Name} ({s.Price} kr)",
-                "Shipping options"
-            );
-
-            return selected;
-
-        }
-
-        private ShippingInfo GetShippingInfo()
-        {
-            Console.WriteLine("\n=== SHIPPING INFO ===");
-
-            Console.Write("Name: ");
-            var name = Console.ReadLine();
-
-            Console.Write("Address: ");
-            var address = Console.ReadLine();
-
-            return new ShippingInfo
-            {
-                Name = name,
-                Address = address
-            };
-        }
-
-        private IPaymentMethod SelectPaymentMethod()
-        {
-
-            var methods = _paymentMethods.ToList();
-
-            var selector = new ListSelector<IPaymentMethod>(_consoleNavigationService);
-
-            var selected = selector.Select(
-                methods,
-                m => m.Name,
-                "Payment methods"
-            );
-
-            return selected;
-
-
-        }
 
         private void ShowCart()
         {

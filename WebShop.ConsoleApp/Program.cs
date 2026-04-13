@@ -1,15 +1,17 @@
-﻿using _1.WebShop.Core.Interfaces;
-using _1.WebShop.Application;
+﻿using _2.WebShop.Application;
+using _1.WebShop.Core.Interfaces;
+using _2.WebShop.Application.Services;
+using _2.WebShop.Application.UseCases;
 using _3.WebShop.Infrastructure.DbContext;
+using _3.WebShop.Infrastructure.Api;
 using _3.WebShop.Infrastructure.Payments;
 using _3.WebShop.Infrastructure.Repositories;
 using _3.WebShop.Infrastructure.Shipping;
+using _4.WebShop.ConsoleApp.UI.Flows;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using UI;
 using WebShop.ConsoleApp.UI;
-using _2.WebShop.Application.Services;
-using _1.WebShop.Application.Services;
 
 var services = new ServiceCollection();
 
@@ -23,11 +25,15 @@ services.AddSingleton<CartService>();
 services.AddScoped<ShoppingCartMenu>();
 services.AddScoped<CheckoutService>();
 
+services.AddScoped<CheckoutFlow>();
+services.AddScoped<ConsoleCheckoutFlow>();
+
 services.AddScoped<IPaymentMethod, CardPayment>();
 services.AddScoped<IPaymentMethod, SwishPayment>();
 
 services.AddScoped<IShippingOption, StandardShipping>();
 services.AddScoped<IShippingOption, ExpressShipping>();
+services.AddScoped<IShippingOption, NoShippingPickupStore>();
 services.AddScoped<AdminMenu>();
 services.AddScoped<ICustomerRepository, CustomerRepository>();
 
@@ -50,8 +56,8 @@ using (var scope = provider.CreateScope())
         await concreteRepo.SeedAsync();
     }
 
-    var menu = scope.ServiceProvider.GetRequiredService<Menu>();
-    await menu.Start();
+   var menu = scope.ServiceProvider.GetRequiredService<Menu>();
+   await menu.Start();
 
 }
 
@@ -62,27 +68,23 @@ namespace WebShop.ConsoleApp
     {
         static async Task Main(string[] args)
         {
-            // sätt ihop alla kopplingar i en service collection
-            var servicesCollection = new ServiceCollection();
+            var services = new ServiceCollection();
 
-            // koppla database
-            servicesCollection.AddDbContext<WebShopContext>();
+            services.AddDbContext<WebShopContext>();
+            services.AddScoped<IProductRepository, ProductRepository>();
 
-            // koppla ihop repository-klasserna med service
-            servicesCollection.AddScoped<IProductRepository, ProductRepository>();
-            servicesCollection.AddScoped<ICustomerRepository, ICustomerRepository>();
+            services.AddScoped<_1.WebShop.Core.Interfaces.ICustomerRepository,
+                _3.WebShop.Infrastructure.Repositories.CustomerRepository>();
+            
+            services.AddScoped<AdminMenu>();
+            services.AddSingleton<ConsoleNavigationService>();
 
-            servicesCollection.AddScoped<AdminMenu>();
+            // 1. Bygg ihop alla services
+            var serviceProvider = services.BuildServiceProvider();
 
-            // koppla ihop nya menyn med de nya repository-klasserna
-            var serviceProvider = servicesCollection.BuildServiceProvider();
-
-
-            // kör igång adminmenyn
+            // 3. Starta din Admin-meny!
             var adminMenu = serviceProvider.GetRequiredService<AdminMenu>();
             await adminMenu.ShowMenuAsync();
-
         }
-    } 
+    }
 }
-
