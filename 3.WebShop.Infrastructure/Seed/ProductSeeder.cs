@@ -108,7 +108,8 @@ namespace _3.WebShop.Infrastructure.Seed
                         IsOnSale = isOnSale,
                         Description = GenerateDescription(category, name),
                         Category = category,
-                        Inventory = inventory
+                        Inventory = inventory,
+                        Supplier = "local supplier"
                     });
                 }
             }
