@@ -6,7 +6,7 @@ namespace _1.WebShop.Core.Entities
 {
     public class Order
     {
-        public int Id { get; set; }
+        public int Id { get; set; }   
 
         public List<OrderRow> Rows { get; set; } = new();
 
@@ -16,6 +16,6 @@ namespace _1.WebShop.Core.Entities
         public DateTime OrderDate { get; set; }
 
         
-        public int CustomerId { get; set; }
+        public int? CustomerId { get; set; }         /// NK
     }
 }

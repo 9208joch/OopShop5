@@ -26,9 +26,9 @@ namespace _2.WebShop.Application.UseCases
             return _checkoutService.CreateSummary(shipping);
         }
 
-        public async Task<Result> CompleteOrder(IPaymentMethod paymentMethod, decimal total)
+        public async Task<Result> CompleteOrder(IPaymentMethod paymentMethod, decimal total, Customer customer)
         {
-            return await _checkoutService.CompleteOrder(paymentMethod, total);
+            return await _checkoutService.CompleteOrder(paymentMethod, total, customer);
         }
 
         public ShoppingCart GetCart()

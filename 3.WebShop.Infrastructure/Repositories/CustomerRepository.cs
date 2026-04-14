@@ -16,6 +16,7 @@ namespace _3.WebShop.Infrastructure.Repositories
             _context = context;
         }
 
+
         public async Task<Customer> GetCustomerByIdAsync(int customerId)
         {
             return await _context.Customers.FindAsync(customerId);
@@ -33,5 +34,16 @@ namespace _3.WebShop.Infrastructure.Repositories
             _context.Customers.Update(customer);
             await _context.SaveChangesAsync();
         }
+
+
+
+
+        public async Task<Customer> GetByEmailAsync(string email)         // NK
+        {
+            return await _context.Customers
+            .FirstOrDefaultAsync(c => c.Email.ToLower() == email.ToLower());
+        }
+
+
     }
 }

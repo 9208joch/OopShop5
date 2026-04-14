@@ -1,4 +1,5 @@
-﻿using _1.WebShop.Core.Interfaces;
+﻿using _1.WebShop.Core.Entities;
+using _1.WebShop.Core.Interfaces;
 using _2.WebShop.Application;
 using _2.WebShop.Application.UseCases;
 using _4.WebShop.ConsoleApp.UI.Forms;
@@ -19,11 +20,15 @@ namespace _4.WebShop.ConsoleApp.UI.Flows
         private readonly ShippingForm _shippingForm;
         private readonly CheckoutView _view;
 
+
+
+        private readonly ICustomerRepository _customerRepository;  // NK
+
         public ConsoleCheckoutFlow(
             CheckoutFlow checkoutFlow,
             IEnumerable<IPaymentMethod> paymentMethods,
             IEnumerable<IShippingOption> shippingOptions,
-            ConsoleNavigationService nav)
+            ConsoleNavigationService nav, ICustomerRepository customerRepository)
         {
             _checkoutFlow = checkoutFlow;
             _paymentMethods = paymentMethods;
@@ -32,6 +37,7 @@ namespace _4.WebShop.ConsoleApp.UI.Flows
 
             _shippingForm = new ShippingForm();
             _view = new CheckoutView();
+            _customerRepository = customerRepository;
         }
 
         public async Task Run()
@@ -44,8 +50,56 @@ namespace _4.WebShop.ConsoleApp.UI.Flows
                 return;
             }
 
-            var shippingInfo = _shippingForm.Collect();
+            // välj checkout typ med ListSelector
+            Customer customer = null;
+            ShippingInfo shippingInfo = null;
 
+            var selector = new ListSelector<string>(_nav);
+
+            var options = new List<string>
+            {
+                "Guest checkout",
+                "Existing customer"
+            };
+
+            var selected = selector.Select(options, x => x, "Checkout type");
+
+            if (selected == null)
+                return;
+
+            if (selected == "Guest checkout")
+            {
+                shippingInfo = _shippingForm.Collect();
+            }
+            else if (selected == "Existing customer")
+            {
+                Console.Clear();
+                Console.Write("Enter email: ");
+                var email = Console.ReadLine();
+
+                customer = await _customerRepository.GetByEmailAsync(email);
+
+                if (customer == null)
+                {
+                    Console.WriteLine("Customer not found.");
+                    Console.ReadKey();
+                    return;
+                }
+
+                Console.WriteLine($"\nCustomer: {customer.Name}");
+                Console.WriteLine($"Address: {customer.Address}, {customer.City}");
+                Console.WriteLine("\nPress ENTER to continue...");
+                Console.ReadLine();
+
+                shippingInfo = new ShippingInfo
+                {
+                    Name = customer.Name,
+                    Address = customer.Address,
+                    Zipcode = ""
+                };
+            }
+
+            
             var shipping = SelectShipping();
             if (shipping == null) return;
 
@@ -61,19 +115,9 @@ namespace _4.WebShop.ConsoleApp.UI.Flows
             var payment = SelectPaymentMethod();
             if (payment == null) return;
 
-           Result result = await _checkoutFlow.CompleteOrder(payment, summary.Total);
+            Result result = await _checkoutFlow.CompleteOrder(payment, summary.Total, customer);
 
-            if (!result.Success)
-            {
-                Console.WriteLine(result.Message);
-            }
-            else
-            {
-                Console.WriteLine(result.Message);
-            }
-                    
-
-            //Console.WriteLine("Order completed!");
+            Console.WriteLine(result.Message);
         }
 
         private IShippingOption SelectShipping()
