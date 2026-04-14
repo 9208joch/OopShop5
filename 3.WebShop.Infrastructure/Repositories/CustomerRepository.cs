@@ -4,6 +4,7 @@ using _3.WebShop.Infrastructure.DbContext;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
+
 namespace _3.WebShop.Infrastructure.Repositories
 {
     
@@ -22,14 +23,18 @@ namespace _3.WebShop.Infrastructure.Repositories
             return await _context.Customers.FindAsync(customerId);
         }
 
-        public async Task<Customer> GetCustomerWithOrdersAsync(int customerId)
-        {
-            return await _context.Customers
-                .Include(c => c.Orders)
-                .FirstOrDefaultAsync(c => c.Id == customerId);
-        }
+        
 
-        public async Task UpdateCustomerAsync(Customer customer)
+public async Task<Customer> GetCustomerWithOrdersAsync(int customerId) // omjord KC
+    {
+        return await _context.Customers
+            .Include(c => c.Orders)
+                .ThenInclude(o => o.Rows)
+                    .ThenInclude(r => r.Product)
+            .FirstOrDefaultAsync(c => c.Id == customerId);
+    }
+
+    public async Task UpdateCustomerAsync(Customer customer)
         {
             _context.Customers.Update(customer);
             await _context.SaveChangesAsync();

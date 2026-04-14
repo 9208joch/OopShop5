@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore; // tillagd kc
 
 namespace WebShop.ConsoleApp.UI
 {
@@ -196,7 +197,7 @@ namespace WebShop.ConsoleApp.UI
                 }
                 Console.WriteLine("Error: Invalid size. Use Small, Medium, or Large.");
             }
-
+            
             while (true)
             {
                 Console.Write($"New price [{product.Price}]: ");
@@ -211,7 +212,7 @@ namespace WebShop.ConsoleApp.UI
                 }
                 Console.WriteLine("Error: Please enter a valid positive number.");
             }
-
+            
             while (true)
             {
                 Console.Write($"New inventory [{product.Inventory}]: ");
