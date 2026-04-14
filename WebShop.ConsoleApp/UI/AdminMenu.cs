@@ -11,10 +11,13 @@ namespace WebShop.ConsoleApp.UI
 {
     public class AdminMenu
     {
+        // Adminmenu som låter admin hantera produkter och kunder.
+
         private readonly ICustomerRepository _customerRepository;
         private readonly IProductRepository _productRepository;
         private readonly ConsoleNavigationService _navigation;
 
+        // Konstruktor som tar in nödvändiga repository och navigation service.
         public AdminMenu(ICustomerRepository customerRepository, IProductRepository productRepository, ConsoleNavigationService navigation)
         {
             _customerRepository = customerRepository;
@@ -22,6 +25,7 @@ namespace WebShop.ConsoleApp.UI
             _navigation = navigation;
         }
 
+        // Huvudmeny för admin där de kan välja att hantera produkter eller kunder.
         public async Task ShowMenuAsync()
         {
             var selector = new ListSelector<string>(_navigation);
@@ -38,7 +42,7 @@ namespace WebShop.ConsoleApp.UI
             }
         }
 
-        
+        // Metod för att hantera produkter där admin kan välja att lägga till, redigera eller ta bort produkter.
         private async Task ManageProductsAsync()
         {
             var selector = new ListSelector<string>(_navigation);
@@ -51,6 +55,7 @@ namespace WebShop.ConsoleApp.UI
             else if (choice == "Delete Product") await DeleteProductAsync();
         }
 
+        // Metod för att lägga till en ny produkt där admin.
         private async Task AddProductAsync()
         {
             Console.Clear();
@@ -117,11 +122,13 @@ namespace WebShop.ConsoleApp.UI
                 Inventory = inventory 
             };
 
+            // Lägger till den nya produkten i repositoryt.
             await _productRepository.AddProductAsync(newProduct);
             Console.WriteLine("\nProduct added successfully! Press Enter to return.");
             Console.ReadLine();
         }
 
+        // Metod för att redigera en befintlig produkt där admin kan söka efter produkter och uppdatera deras information.
         private async Task EditProductAsync()
         {
             Console.Clear();
@@ -161,8 +168,8 @@ namespace WebShop.ConsoleApp.UI
                 return;
             }
 
+            // Om admin väljer 0 så avbryts redigeringen.
             if (choice == 0) return;
-
             var product = matchingProducts[choice - 1];
 
             Console.Clear();
@@ -225,6 +232,7 @@ namespace WebShop.ConsoleApp.UI
             Console.ReadLine();
         }
 
+        // Metod för att ta bort en produkt där admin kan söka efter produkter och välja vilken de vill ta bort.
         private async Task DeleteProductAsync()
         {
             Console.Clear();
@@ -268,6 +276,7 @@ namespace WebShop.ConsoleApp.UI
             Console.ReadLine();
         }
 
+        // Metod för att hantera kunder där admin kan välja att redigera kundprofiler eller visa orderhistorik.
         private async Task ManageCustomersAsync()
         {
             var selector = new ListSelector<string>(_navigation);
@@ -279,6 +288,7 @@ namespace WebShop.ConsoleApp.UI
             else if (choice == "View Order History") await ViewCustomerHistoryAsync();
         }
 
+        // Metod för att redigera en kunds profil där admin kan uppdatera kundens information.
         private async Task EditCustomerAsync()
         {
             Console.Clear();
@@ -370,6 +380,7 @@ namespace WebShop.ConsoleApp.UI
             Console.ReadLine();
         }
 
+        // Metod för att visa en kunds orderhistorik där admin kan se alla tidigare beställningar och deras detaljer.
         private async Task ViewCustomerHistoryAsync()
         {
             Console.Clear();
@@ -398,6 +409,17 @@ namespace WebShop.ConsoleApp.UI
                     foreach (var order in customer.Orders)
                     {
                         Console.WriteLine($"- Order #{order.Id} | Date: {order.OrderDate:yyyy-MM-dd} | Total: {order.TotalPrice} kr");
+
+                        // Visa varje rad i ordern med produktnamn och kvantitet.
+                        if (order.Rows!= null && order.Rows.Any())
+                        {
+                            foreach (var row in order.Rows)
+                            {
+                              
+                                string productName = row.Product != null ? row.Product.Name : "Unknown Product";
+                                Console.WriteLine($"    * {row.Quantity} x {productName}");
+                            }
+                        }
                     }
                     Console.WriteLine("\nPress Enter to return.");
                 }

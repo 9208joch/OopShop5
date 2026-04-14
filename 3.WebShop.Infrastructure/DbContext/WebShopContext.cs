@@ -1,4 +1,5 @@
 ﻿using _1.WebShop.Core.Entities;
+using _3.WebShop.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,9 @@ namespace _3.WebShop.Infrastructure.DbContext
 
             modelBuilder.Entity<Product>()
                 .HasCheckConstraint("CK_Product_Inventory", "Inventory >= 0");
+
+            
+            CustomersSeeder.Seed(modelBuilder);
         }
     }
 }
