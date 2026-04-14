@@ -12,10 +12,13 @@ namespace _2.WebShop.Application.Services
         private readonly CartService _cartService;
         private readonly IProductRepository _productRepository;
 
-        public CheckoutService(CartService cartService, IProductRepository productRepository)
+        private readonly IOrderRepository _orderRepository;    //NK
+
+        public CheckoutService(CartService cartService, IProductRepository productRepository, IOrderRepository orderRepository)
         {
             _cartService = cartService;
             _productRepository = productRepository;
+            _orderRepository = orderRepository;
         }
 
         public CheckoutSummary CreateSummary(IShippingOption shipping)
@@ -39,7 +42,7 @@ namespace _2.WebShop.Application.Services
             };
         }
 
-        public async Task<Result> CompleteOrder(IPaymentMethod paymentMethod, decimal totalAmount)
+        public async Task<Result> CompleteOrder(IPaymentMethod paymentMethod, decimal totalAmount, Customer customer)
         {
             var cart = _cartService.GetCart();
 
@@ -59,6 +62,25 @@ namespace _2.WebShop.Application.Services
             }
 
             paymentMethod.Pay(totalAmount);
+
+            
+            var order = new Order
+            {
+                CustomerId = customer?.Id, 
+                OrderDate = DateTime.Now,
+                TotalPrice = totalAmount,
+
+                Rows = cart.Items.Select(i => new OrderRow
+                {
+                    ProductId = i.Product.Id,
+                    Quantity = i.Quantity,
+                                               
+                }).ToList()
+            };
+
+            
+            await _orderRepository.AddOrderAsync(order);
+
 
             _cartService.ClearCart();
 

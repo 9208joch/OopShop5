@@ -37,6 +37,8 @@ services.AddScoped<IShippingOption, NoShippingPickupStore>();
 services.AddScoped<AdminMenu>();
 services.AddScoped<ICustomerRepository, CustomerRepository>();
 
+
+services.AddScoped<IOrderRepository, OrderRepository>();        //NK
 //var provider = services.BuildServiceProvider();
 
 services.AddScoped<Menu>();

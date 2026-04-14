@@ -8,5 +8,10 @@ namespace _1.WebShop.Core.Interfaces
         Task<Customer> GetCustomerByIdAsync(int customerId);
         Task<Customer> GetCustomerWithOrdersAsync(int customerId);
         Task UpdateCustomerAsync(Customer customer);
+
+
+
+
+        Task<Customer> GetByEmailAsync(string email);  // NK
     }
 }
