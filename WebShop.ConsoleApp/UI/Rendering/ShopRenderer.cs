@@ -332,7 +332,9 @@ namespace WebShop.ConsoleApp.UI.Rendering
             WriteLineInModal(x + 2, y + 3, state.ModalProduct.Description);
 
             // Pris
-            WriteLineInModal(x + 2, y + 5, $"Price: {state.ModalProduct.Price} kr");
+            var selectedVariant = modalVariants
+    .ElementAtOrDefault(state.SelectedSizeIndex) ?? state.ModalProduct;
+            WriteLineInModal(x + 2, y + 5, $"Price: {selectedVariant.Price} kr");
 
             // Label
             WriteLineInModal(x + 2, y + 7, "Sizes:");
