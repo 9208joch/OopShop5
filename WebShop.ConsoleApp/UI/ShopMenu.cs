@@ -3,6 +3,7 @@ using System.Linq;
 using _1.WebShop.Core.Entities;
 using _1.WebShop.Core.Interfaces;
 using _2.WebShop.Application.Services;
+using _3.WebShop.Infrastructure.Repositories;
 using UI;
 using WebShop.ConsoleApp;
 using WebShop.ConsoleApp.UI.Navigation;
@@ -20,7 +21,7 @@ public class ShopMenu
     private List<Product> searchResults = new();
 
     private string[] sidebarOptions = { "Sale", "Categories", "Home Page", "Shopping Cart","Search" };
-    private string[] categories = { "Sweater", "Shorts", "T-shirt", "Jeans", "Jacket" };
+    
 
     private bool sizeErrorShown = false;
     private DateTime lastErrorTime = DateTime.MinValue;
@@ -33,9 +34,13 @@ public class ShopMenu
     private readonly ShopSidebarNavigationHandler _sidebarHandler;
     private readonly ShopSearchHandler _searchHandler;
     private readonly CommonRenderer _commonRenderer = new();
+    private readonly ICategoryRepository _categoryRepository;
+    private List<Category> _categories = new();
 
+    
     public ShopMenu(
-    IProductRepository repo,
+    IProductRepository repo, 
+    ICategoryRepository categoryRepository,
     ConsoleNavigationService nav,
     CartService cartService,
     ShoppingCartMenu shoppingCartMenu)
@@ -43,6 +48,7 @@ public class ShopMenu
         _repo = repo;
         _nav = nav;
         _cartService = cartService;
+        _categoryRepository = categoryRepository;
         _shoppingCartMenu = shoppingCartMenu;
 
         _navHandler = new ShopNavigationHandler(_repo, _cartService);
@@ -61,6 +67,10 @@ public class ShopMenu
 
         _state.SelectedOfferIndex = 0;
     }
+    private async Task LoadCategories()
+    {
+        _categories = await _categoryRepository.GetAllAsync();
+    }
     private async Task LoadProducts()
     {
         var rnd = new Random();
@@ -76,19 +86,23 @@ public class ShopMenu
         _state.SelectedProductIndex = 0;
     }
 
-    private async Task LoadCategoryProducts(string category)
+    private async Task LoadCategoryProducts(string categoryName)
     {
         var all = await _repo.GetAllAsync();
 
+        var category = _categories.FirstOrDefault(c => c.Name == categoryName);
+
+        if (category == null) return;
+
         _state.FilteredProducts = all
-            .Where(p => p.Category == category)
+            .Where(p => p.CategoryId == category.Id)
             .GroupBy(p => p.Name)
             .Select(g => g.First())
             .ToList();
 
         _state.SelectedProductIndex = 0;
     }
- 
+
     private void ResetModal()
     {
         _state.InModal = false;
@@ -183,10 +197,10 @@ public class ShopMenu
     public async Task Start()
     {
         Console.CursorVisible = false;
-
+        await LoadCategories();
         await LoadOffers();
         await LoadProducts();
-
+        
         // Initial state
         _state.InOffers = true;
         _state.InProducts = false;
@@ -208,7 +222,7 @@ public class ShopMenu
                 Console.SetCursorPosition(0, 0);
 
                 _commonRenderer.DrawHeader();
-                _renderer.DrawSidebar(_state, sidebarOptions, categories);
+                _renderer.DrawSidebar(_state, sidebarOptions, _categories.Select(c => c.Name).ToArray());
                 _renderer.DrawSearchBox(_state);
 
                 await _searchHandler.HandleInput(
@@ -224,7 +238,7 @@ public class ShopMenu
             Console.Clear();
 
             _commonRenderer.DrawHeader();
-            _renderer.DrawSidebar(_state, sidebarOptions, categories);
+            _renderer.DrawSidebar(_state, sidebarOptions, _categories.Select(c => c.Name).ToArray());
 
             if (_state.SearchActive)
             {
@@ -297,14 +311,15 @@ public class ShopMenu
             }
             else if (_state.InSidebar)
             {
+
                 await _sidebarHandler.Handle(
-                    _state,
-                    action,
-                    categories,
-                    LoadCategoryProducts,
-                    LoadOffers,
-                    async () => await _shoppingCartMenu.Start()
-                );
+              _state,
+              action,
+              _categories.Select(c => c.Name).ToArray(),
+              LoadCategoryProducts,
+             LoadOffers,
+             async () => await _shoppingCartMenu.Start()
+            );
                 // HOME → exit
                 if (!_state.InSidebar &&
                     !_state.InOffers &&

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace _3.WebShop.Infrastructure.Repositories
 {
+    
     public class ProductRepository : IProductRepository
     {
         private readonly WebShopContext _context;
@@ -21,10 +22,14 @@ namespace _3.WebShop.Infrastructure.Repositories
         }
 
         public async Task<List<Product>> GetAllAsync()
-            => await _context.Products.ToListAsync();
+    => await _context.Products
+        .Include(p => p.Category)
+        .ToListAsync();
 
         public async Task<Product> GetProductByIdAsync(int id)
-            => await _context.Products.FindAsync(id);
+     => await _context.Products
+         .Include(p => p.Category)
+         .FirstOrDefaultAsync(p => p.Id == id);
 
         public async Task AddAsync(Product product)
         {

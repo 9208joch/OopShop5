@@ -7,15 +7,22 @@ namespace _3.WebShop.Infrastructure.DbContext
     {
         public static async Task SeedAsync(WebShopContext context)
         {
-            //  1. PRODUCTS
-            if (!context.Products.Any())
+      
+            // 1. PRODUCTS 
+   
+            if (context.Products.Any())
             {
-                var Products = ProductSeeder.GenerateProducts(200);
-                context.Products.AddRange(Products);
+                context.Products.RemoveRange(context.Products);
                 await context.SaveChangesAsync();
             }
 
-            //  2. CUSTOMERS (måste finnas)
+            var products = ProductSeeder.GenerateProducts(200);
+            context.Products.AddRange(products);
+            await context.SaveChangesAsync();
+
+      
+            // 2. CUSTOMERS 
+    
             var customers = context.Customers.ToList();
 
             if (!customers.Any())
@@ -23,19 +30,21 @@ namespace _3.WebShop.Infrastructure.DbContext
                 throw new Exception("No customers found in database. Seed customers first.");
             }
 
-            //  3. HÄMTA PRODUCTS FRÅN DB (med riktiga Id:n)
-            var products = context.Products.ToList();
-
-            //  4. ORDERS
-            if (!context.Orders.Any())
+ 
+            // 3. ORDERS 
+        
+            if (context.Orders.Any())
             {
-                var orders = OrderSeeder.GenerateOrders(products, customers, 10);
-
-                Console.WriteLine($"[Seeder] Orders created: {orders.Count}");
-
-                context.Orders.AddRange(orders);
+                context.Orders.RemoveRange(context.Orders);
                 await context.SaveChangesAsync();
             }
+
+            var orders = OrderSeeder.GenerateOrders(products, customers, 10);
+
+            Console.WriteLine($"[Seeder] Orders created: {orders.Count}");
+
+            context.Orders.AddRange(orders);
+            await context.SaveChangesAsync();
         }
     }
 }

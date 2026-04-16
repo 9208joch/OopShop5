@@ -68,7 +68,7 @@ public class ShopModalNavigationHandler
                     resetModal();
 
                 break;
-
+                
             case NavigationAction.Back:
                 resetModal();
                 break;

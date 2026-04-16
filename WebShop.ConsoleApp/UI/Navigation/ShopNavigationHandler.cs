@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using _1.WebShop.Core.Enums;
 using _1.WebShop.Core.Entities;
 using _1.WebShop.Core.Interfaces;
 using _2.WebShop.Application.Services;
@@ -127,7 +128,7 @@ namespace WebShop.ConsoleApp.UI.Navigation
                         await openCart();
                         return;
                     }
-
+                    
                     // SEARCH
                     if (state.SelectedSidebarIndex == 4)
                     {
@@ -245,13 +246,41 @@ namespace WebShop.ConsoleApp.UI.Navigation
 
                     state.ModalProduct = list[state.SelectedProductIndex];
 
-                    var variants = (await _repo.GetAllAsync())
+                    var allProducts = await _repo.GetAllAsync();
+
+                    var existingVariants = allProducts
                         .Where(p => p.Name == state.ModalProduct.Name)
-                        .OrderBy(p => p.Size)
                         .ToList();
 
+                    var allSizes = Enum.GetValues<Size>();
+
+                    var fullList = new List<Product>();
+
+                    foreach (var size in allSizes)
+                    {
+                        var existing = existingVariants.FirstOrDefault(p => p.Size == size);
+
+                        if (existing != null)
+                        {
+                            fullList.Add(existing);
+                        }
+                        else
+                        {
+                            // skapa "fake" variant med 0 i lager
+                            fullList.Add(new Product
+                            {
+                                Name = state.ModalProduct.Name,
+                                Description = state.ModalProduct.Description,
+                                Price = state.ModalProduct.Price,
+                                Size = size,
+                                Inventory = 0,
+                                CategoryId = state.ModalProduct.CategoryId
+                            });
+                        }
+                    }
+
                     modalVariants.Clear();
-                    modalVariants.AddRange(variants);
+                    modalVariants.AddRange(fullList.OrderBy(p => p.Size));
 
                     state.SelectedSizeIndex = 0;
                     state.SelectedModalButton = 0;
