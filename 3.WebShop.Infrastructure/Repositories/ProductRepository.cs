@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace _3.WebShop.Infrastructure.Repositories
 {
+    
     public class ProductRepository : IProductRepository
     {
         private readonly WebShopContext _context;
@@ -21,10 +22,14 @@ namespace _3.WebShop.Infrastructure.Repositories
         }
 
         public async Task<List<Product>> GetAllAsync()
-            => await _context.Products.ToListAsync();
+    => await _context.Products
+        .Include(p => p.Category)
+        .ToListAsync();
 
-        public async Task<Product> GetByIdAsync(int id)
-            => await _context.Products.FindAsync(id);
+        public async Task<Product> GetProductByIdAsync(int id)
+     => await _context.Products
+         .Include(p => p.Category)
+         .FirstOrDefaultAsync(p => p.Id == id);
 
         public async Task AddAsync(Product product)
         {
@@ -32,13 +37,13 @@ namespace _3.WebShop.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(Product product)
+        public async Task UpdateProductAsync(Product product)
         {
             _context.Products.Update(product);
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteProductAsync(int id)
         {
             var product = await _context.Products.FindAsync(id);
             if (product != null)
@@ -48,16 +53,15 @@ namespace _3.WebShop.Infrastructure.Repositories
             }
         }
 
-        // Implement AddProductAsync declared in the interface
         public async Task AddProductAsync(Product newProduct)
         {
-            // Delegate to existing AddAsync implementation
             await AddAsync(newProduct);
         }
 
         public async Task SeedAsync()
         {   
             if (_context.Products.Any())
+
                 return;
 
             var products = ProductSeeder.GenerateProducts(1001);

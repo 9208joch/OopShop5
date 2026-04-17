@@ -4,14 +4,11 @@ using System.Text;
 
 namespace _1.WebShop.Core.Entities
 {
-    public class ShippingInfo
+    public class Category
     {
+        public int Id { get; set; }
         public string Name { get; set; }
 
-        public string Address { get; set; }
-
-        public string Zipcode { get; set; }
-
-
+        public List<Product> Products { get; set; } = new();
     }
 }

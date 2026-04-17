@@ -13,7 +13,7 @@ namespace _1.WebShop.Core.Entities
         public int Id { get; set; }
 
         [Required]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         public Enums.Size Size { get; set; }
 
@@ -23,10 +23,15 @@ namespace _1.WebShop.Core.Entities
         public decimal? SalePrice { get; set; }
         public bool IsOnSale { get; set; }
 
-        public string Description { get; set; }
-        public string Category { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public int CategoryId { get; set; }
+        public Category? Category { get; set; }
+
 
         [Range(0, int.MaxValue)]
         public int Inventory { get; set; }
+
+        public string Supplier { get; set; } = string.Empty;
+
     }
 }

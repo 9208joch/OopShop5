@@ -1,0 +1,581 @@
+﻿här har jag sparat kod som kommer från ShopMenu.cs och nu ligger i ShopRenderer.cs 
+detta är sparat utifall något "går sönder" under merge
+
+//private void DrawHeader()
+    //{
+    //    string title = "Backends Clothing";
+    //    Console.SetCursorPosition((Console.WindowWidth - title.Length) / 2, 1);
+    //    Console.WriteLine(title);
+    //}
+
+        //private void DrawModal()
+    //{
+    //    int width = 70;
+    //    int height = Math.Min(25, 12 + modalVariants.Count);
+
+    //    int x = (Console.WindowWidth - width) / 2;
+    //    int y = 3;
+
+    //    //  Bakgrund
+    //    Console.BackgroundColor = ConsoleColor.DarkGray;
+
+    //    for (int i = 0; i < height; i++)
+    //    {
+    //        Console.SetCursorPosition(x, y + i);
+    //        Console.Write(new string(' ', width));
+    //    }
+
+    //    Console.ResetColor();
+
+    //    //  Helper för att alltid sätta rätt bakgrund
+    //    void WriteLineInModal(int posX, int posY, string text)
+    //    {
+    //        Console.SetCursorPosition(posX, posY);
+    //        Console.BackgroundColor = ConsoleColor.DarkGray;
+    //        Console.ForegroundColor = ConsoleColor.Black;
+    //        Console.WriteLine(text.PadRight(width - 4));
+    //        Console.ResetColor();
+    //    }
+
+    //    //  Titel
+    //    WriteLineInModal(x + 2, y + 1, _state.ModalProduct!.Name);
+
+    //    //  Beskrivning
+    //    WriteLineInModal(x + 2, y + 3, _state.ModalProduct.Description);
+
+    //    //  Pris
+    //    WriteLineInModal(x + 2, y + 5, $"Price: {_state.ModalProduct.Price} kr");
+
+    //    //  Label
+    //    WriteLineInModal(x + 2, y + 7, "Sizes:");
+
+     
+    //    //  SIZES 
+       
+    //    for (int i = 0; i < modalVariants.Count; i++)
+    //    {
+    //        int posY = y + 8 + i;
+    //        if (posY >= y + height - 2) break;
+
+    //        var v = modalVariants[i];
+
+    //        Console.SetCursorPosition(x + 4, posY);
+
+    //        string text = $"{v.Size,-10} ({v.Inventory,2})";
+
+    //        //  default
+    //        Console.BackgroundColor = ConsoleColor.DarkGray;
+    //        Console.ForegroundColor = ConsoleColor.Black;
+
+    //        //  out of stock
+    //        if (v.Inventory == 0)
+    //            Console.ForegroundColor = ConsoleColor.Red;
+
+    //        //  SELECTED (tryckt enter)
+    //        if (_state.SelectedSize == i)
+    //        {
+    //            Console.BackgroundColor = ConsoleColor.DarkYellow;
+    //            Console.ForegroundColor = ConsoleColor.Black;
+    //        }
+
+    //        //  HOVER (cursor)
+    //        if (_state.SelectedModalButton == 0 && i == _state.SelectedSizeIndex)
+    //        {
+    //            Console.BackgroundColor = ConsoleColor.Gray;
+    //            Console.ForegroundColor = ConsoleColor.Black;
+    //        }
+
+    //        Console.WriteLine(text.PadRight(20));
+    //        Console.ResetColor();
+    //    }
+
+    
+    //    //  KNAPPAR
+        
+    //    int buttonX = x + width - 20;
+
+    //    // Add to cart
+    //    Console.SetCursorPosition(buttonX, y + 10);
+    //    Console.BackgroundColor = ConsoleColor.DarkGray;
+    //    Console.ForegroundColor = ConsoleColor.Black;
+
+
+    //    if (_state.SelectedModalButton == 1)
+    //    {
+    //        Console.BackgroundColor = ConsoleColor.Gray;
+    //    }
+
+    //    Console.WriteLine("[Add to cart]");
+    //    Console.ResetColor();
+
+    //    // Back
+    //    Console.SetCursorPosition(buttonX, y + 12);
+    //    Console.BackgroundColor = ConsoleColor.DarkGray;
+    //    Console.ForegroundColor = ConsoleColor.Black;
+
+    //    if (_state.SelectedModalButton == 2)
+    //    {
+    //        Console.BackgroundColor = ConsoleColor.Gray;
+    //    }
+
+    //    Console.WriteLine("[Back]");
+    //    Console.ResetColor();
+
+        
+    //    // ERROR
+        
+    //    if (sizeErrorShown && (DateTime.Now - lastErrorTime).TotalSeconds < 2)
+    //    {
+    //        Console.SetCursorPosition(x + 2, y + height - 2);
+    //        Console.BackgroundColor = ConsoleColor.DarkGray;
+    //        Console.ForegroundColor = ConsoleColor.Red;
+
+    //        Console.WriteLine("Please select a size!".PadRight(width - 4));
+
+    //        Console.ResetColor();
+    //    }
+    //}
+     //private void DrawSearchBox()
+    //{
+    //    int width = 50;
+    //    int x = (Console.WindowWidth - width) / 2;
+    //    int y = 5;
+
+    //    //  Titel
+    //    Console.SetCursorPosition(x, y);
+    //    Console.ForegroundColor = ConsoleColor.White;
+    //    Console.WriteLine("Search _state.InProducts:");
+
+    //    //  Input box
+    //    Console.SetCursorPosition(x, y + 1);
+    //    Console.BackgroundColor = ConsoleColor.DarkGray;
+    //    Console.ForegroundColor = ConsoleColor.White;
+
+    //    string displayText = _state.SearchQuery;
+
+    //    //  Klipp text om den för lång
+    //    if (displayText.Length > width)
+    //        displayText = displayText[^width..];
+
+    //    Console.Write(displayText.PadRight(width));
+
+    //    Console.ResetColor();
+
+    //    //  Sätt cursor i slutet av texten 
+    //    int cursorPos = Math.Min(displayText.Length, width - 1);
+    //    Console.SetCursorPosition(x + cursorPos, y + 1);
+
+    //    //  Visa cursor endast när skriver
+    //    Console.CursorVisible = _state.SearchTyping;
+    //}
+    //private void DrawSidebar()
+    //{
+    //    int x = 2;
+    //    int y = 5;
+
+    //    for (int i = 0; i < sidebarOptions.Length; i++)
+    //    {
+    //        Console.SetCursorPosition(x, y);
+
+    //        bool selected = _state.InSidebar && i == _state.SelectedSidebarIndex;
+
+    //        //  Highlight för vald rad
+    //        if (selected)
+    //        {
+    //            Console.BackgroundColor = ConsoleColor.White;
+    //            Console.ForegroundColor = ConsoleColor.Black;
+    //        }
+    //        else
+    //        {
+    //            Console.ResetColor();
+    //        }
+
+    //        //  SALE (grön text)
+    //        if (i == 0)
+    //        {
+    //            if (!selected)
+    //                Console.ForegroundColor = ConsoleColor.Green;
+
+    //            Console.WriteLine("Sale");
+    //        }
+    //        //  CATEGORIES med pil
+    //        else if (i == 1)
+    //        {
+    //            string arrow = _state.CategoriesOpen ? "▲" : "▼";
+    //            Console.WriteLine($"Categories {arrow}");
+    //        }
+    //        //  Övriga
+    //        else
+    //        {
+    //            Console.WriteLine(sidebarOptions[i]);
+    //        }
+
+    //        Console.ResetColor();
+    //        y++;
+
+  
+    //        // CATEGORY DROPDOWN
+           
+    //        if (i == 1 && _state.CategoriesOpen)
+    //        {
+    //            for (int j = 0; j < categories.Length; j++)
+    //            {
+    //                Console.SetCursorPosition(x + 2, y);
+
+    //                bool catSelected =
+    //                    _state.InSidebar &&
+    //                    _state.SelectedSidebarIndex == 1 &&
+    //                    _state.SelectedCategoryIndex == j;
+
+    //                if (catSelected)
+    //                {
+    //                    Console.BackgroundColor = ConsoleColor.DarkGray;
+    //                    Console.ForegroundColor = ConsoleColor.White;
+    //                }
+    //                else
+    //                {
+    //                    Console.ResetColor();
+    //                }
+
+    //                Console.WriteLine(categories[j]);
+
+    //                Console.ResetColor();
+    //                y++;
+    //            }
+    //        }
+    //    }
+    //}
+
+    //private void DrawOffers()
+    //{
+    //    int cardWidth = 30;
+    //    int innerWidth = 28;
+
+    //    int startX = (Console.WindowWidth - (cardWidth * 3)) / 2;
+    //    int startY = 6;
+
+    //    string title = _state.SaleActive ? "=== Sale ===" : "=== Great _state.Offers ===";
+    //    Console.SetCursorPosition((Console.WindowWidth - title.Length) / 2, startY - 2);
+    //    Console.WriteLine(title);
+
+    //    var list = _state.SaleActive ? _state.Offers : _state.Offers.Take(6).ToList();
+
+    //    int visibleRows = (Console.WindowHeight - startY) / 7;
+    //    int itemsPerPage = visibleRows * 3;
+
+    //    for (int i = 0; i < itemsPerPage; i++)
+    //    {
+    //        int index = i + _state.OfferScrollOffset;
+    //        if (index >= list.Count) break;
+
+    //        var p = list[index];
+
+    //        int col = i % 3;
+    //        int row = i / 3;
+
+    //        int x = startX + col * cardWidth;
+    //        int y = startY + row * 7;
+
+    //        bool isSelected = index == _state.SelectedOfferIndex && _state.InOffers;
+
+    //        if (isSelected)
+    //            Console.BackgroundColor = ConsoleColor.DarkGray;
+
+    //        Console.SetCursorPosition(x, y);
+    //        Console.WriteLine($"{p.Name} ({p.Size})".PadRight(innerWidth));
+
+    //        var lines = WrapText(p.Description ?? "", innerWidth).Take(2).ToList();
+
+    //        string line1 = lines.ElementAtOrDefault(0) ?? "";
+    //        string line2 = lines.ElementAtOrDefault(1) ?? "";
+
+    //        Console.SetCursorPosition(x, y + 1);
+    //        Console.WriteLine(line1.PadRight(innerWidth));
+
+    //        Console.SetCursorPosition(x, y + 2);
+    //        Console.WriteLine(line2.PadRight(innerWidth));
+
+    //        Console.SetCursorPosition(x, y + 3);
+    //        Console.ForegroundColor = ConsoleColor.Red;
+    //        Console.WriteLine($"Price: {p.Price} kr".PadRight(innerWidth));
+
+    //        Console.SetCursorPosition(x, y + 4);
+    //        Console.ForegroundColor = ConsoleColor.Green;
+    //        Console.WriteLine($"Sale: {p.SalePrice ?? p.Price} kr".PadRight(innerWidth));
+
+    //        Console.ResetColor();
+
+    //        Console.SetCursorPosition(x, y + 5);
+
+    //        if (isSelected)
+    //            Highlight();
+
+    //        Console.WriteLine("[Add to cart]".PadRight(innerWidth));
+    //        Console.ResetColor();
+    //    }
+
+    //    //  Scroll indicators
+    //    bool canScrollDown = _state.OfferScrollOffset + itemsPerPage < list.Count;
+    //    bool canScrollUp = _state.OfferScrollOffset > 0;
+
+    //    if (_state.SaleActive && canScrollDown)
+    //    {
+    //        Console.SetCursorPosition(Console.WindowWidth - 10, Console.WindowHeight - 1);
+    //        Console.Write("[More ↓]");
+    //    }
+
+    //    if (_state.SaleActive && canScrollUp)
+    //    {
+    //        Console.SetCursorPosition(Console.WindowWidth - 10, startY - 1);
+    //        Console.Write("[↑ More]");
+    //    }
+    //}
+    //private List<string> WrapText(string text, int maxWidth)
+    //{
+    //    var words = text.Split(' ');
+    //    var lines = new List<string>();
+    //    var current = "";
+
+    //    foreach (var word in words)
+    //    {
+    //        if ((current + word).Length > maxWidth)
+    //        {
+    //            lines.Add(current.Trim());
+    //            current = "";
+    //        }
+
+    //        current += word + " ";
+    //    }
+
+    //    if (!string.IsNullOrWhiteSpace(current))
+    //        lines.Add(current.Trim());
+
+    //    return lines;
+    //}
+    
+    //private void DrawProducts()
+    //{
+    //    int cardWidth = 30;
+    //    int innerWidth = 28;
+
+    //    int startY = _state.CategoryActive ? 6 : 20;
+    //    int startX = (Console.WindowWidth - (cardWidth * 3)) / 2;
+    //    int maxHeight = Console.WindowHeight - 2;
+
+
+    //    var list = _state.SearchActive
+    //        ? searchResults
+    //        : (_state.CategoryActive ? _state.FilteredProducts : _state.Products);
+
+    //    if (list.Count == 0)
+    //    {
+    //        Console.SetCursorPosition(startX, startY);
+    //        Console.WriteLine("No _state.InProducts found...");
+    //        return;
+    //    }
+
+    //    int visibleRows = (Console.WindowHeight - startY) / 4;
+    //    int itemsPerPage = visibleRows * 3;
+
+    //    for (int i = 0; i < itemsPerPage; i++)
+    //    {
+    //        int index = i + _state.ProductScrollOffset;
+    //        if (index >= list.Count) break;
+
+    //        var p = list[index];
+
+    //        int col = i % 3;
+    //        int row = i / 3;
+
+    //        int x = startX + col * cardWidth;
+    //        int y = startY + row * 4;
+
+    //        bool isSelected = index == _state.SelectedProductIndex && _state.InProducts;
+
+    //        //  highlight hela kortet
+    //        if (isSelected)
+    //            Console.BackgroundColor = ConsoleColor.DarkGray;
+
+    //        //  NAME
+    //        Console.SetCursorPosition(x, y);
+    //        DrawHighlightedText(p.Name, _state.SearchQuery, x, y, innerWidth);
+
+    //        //  PRICE (sale stöd)
+    //        Console.SetCursorPosition(x, y + 1);
+
+    //        if (p.IsOnSale)
+    //        {
+    //            Console.ForegroundColor = ConsoleColor.Red;
+    //            Console.Write($"Old: {p.Price} ");
+
+    //            Console.ForegroundColor = ConsoleColor.Green;
+    //            Console.WriteLine($"New: {p.SalePrice}".PadRight(innerWidth));
+    //        }
+    //        else
+    //        {
+    //            Console.WriteLine($"Price: {p.Price} kr".PadRight(innerWidth));
+    //        }
+
+    //        Console.ResetColor();
+
+    //        //  BUTTON
+    //        Console.SetCursorPosition(x, y + 2);
+
+    //        if (isSelected)
+    //            Highlight();
+
+    //        Console.WriteLine("[More info]".PadRight(innerWidth));
+    //        Console.ResetColor();
+    //    }
+
+    //    //  SCROLL indikatorer
+    //    bool canScrollDown = _state.ProductScrollOffset + itemsPerPage < list.Count;
+    //    bool canScrollUp = _state.ProductScrollOffset > 0;
+
+    //    if (canScrollDown)
+    //    {
+    //        Console.SetCursorPosition(Console.WindowWidth - 10, maxHeight - 1);
+    //        Console.Write("[More ↓]");
+    //    }
+
+    //    if (canScrollUp)
+    //    {
+    //        Console.SetCursorPosition(Console.WindowWidth - 10, startY - 1);
+    //        Console.Write("[↑ More]");
+    //    }
+    //}
+
+
+    =============================================================================================================================================
+    kod som var i Menu.cs som nu ligger i commonRenderer.cs, sparat här ifall något går sönder under merge
+
+
+        //private void DrawHeader()
+    //{
+    //    string title = "Backends Clothing";
+    //    string subtitle = "Over 1000 products!";
+
+    //    int center = Console.WindowWidth / 2;
+
+    //    Console.SetCursorPosition(center - title.Length / 2, 1);
+    //    Console.WriteLine(title);
+
+    //    Console.SetCursorPosition(center - subtitle.Length / 2, 2);
+    //    Console.WriteLine(subtitle);
+    //}
+
+
+
+     =============================================================================================================================================
+    kod som var i Menu.cs som nu ligger i MenuRenderer.cs, sparat här ifall något går sönder under merge
+
+        //private void DrawOffers(List<Product> offers)
+    //{
+    //    int cardWidth = 30;
+    //    int innerWidth = 28;
+
+    //    int totalWidth = cardWidth * offers.Count;
+    //    int startX = (Console.WindowWidth - totalWidth) / 2;
+    //    int startY = 8;
+        
+    //    string title = "=== Great Offers ===";
+    //    int center = Console.WindowWidth / 2;
+
+    //    Console.SetCursorPosition(center - title.Length / 2, startY - 2);
+    //    Console.WriteLine(title);
+
+    //    for (int i = 0; i < offers.Count; i++)
+    //    {
+    //        var p = offers[i];
+    //        int x = startX + (i * cardWidth);
+
+    //        bool selected = i == _state.SelectedOfferIndex && _state.InOffers;
+
+            
+    //        var lines = WrapText(p.Description, innerWidth).Take(2).ToList();
+
+    //        int currentY = startY;
+
+            
+    //        if (selected)
+    //            Console.BackgroundColor = ConsoleColor.DarkGray;
+
+    //        // Name
+    //        Console.SetCursorPosition(x, currentY++);
+    //        Console.WriteLine(p.Name.PadRight(innerWidth));
+            
+    //        // Description (flera rader)
+    //        foreach (var line in lines)
+    //        {
+    //            Console.SetCursorPosition(x, currentY++);
+    //            Console.WriteLine(line.PadRight(innerWidth));
+    //        }
+            
+    //        // Price
+    //        Console.SetCursorPosition(x, currentY++);
+    //        Console.ForegroundColor = ConsoleColor.Red;
+    //        Console.WriteLine($"Price: {p.Price} kr".PadRight(innerWidth));
+
+    //        // Sale
+    //        Console.SetCursorPosition(x, currentY++);
+    //        Console.ForegroundColor = ConsoleColor.Green;
+    //        Console.WriteLine($"Sale: {p.SalePrice ?? p.Price} kr".PadRight(innerWidth));
+
+
+            
+    //        // Add to cart
+    //        Console.SetCursorPosition(x, currentY);
+
+    //        if (selected)
+    //        {
+    //            Console.ForegroundColor = ConsoleColor.Black;
+    //            Console.BackgroundColor = ConsoleColor.White;
+    //        }
+
+    //        Console.WriteLine("[Add to cart]".PadRight(innerWidth));
+
+    //        Console.ResetColor();
+    //    }
+    //}
+    
+    //private List<string> WrapText(string text, int maxWidth)
+    //{
+    //    var words = text.Split(' ');
+    //    var lines = new List<string>();
+    //    var currentLine = "";
+        
+    //    foreach (var word in words)
+    //    {
+    //        if ((currentLine + word).Length > maxWidth)
+    //        {
+    //            lines.Add(currentLine.Trim());
+    //            currentLine = "";
+    //        }
+
+    //        currentLine += word + " ";
+    //    }
+
+    //    if (!string.IsNullOrWhiteSpace(currentLine))
+    //        lines.Add(currentLine.Trim());
+
+    //    return lines;
+    //}
+    //private void DrawMenu()
+    //{
+    //    int startY = 15;
+    //    int startX = 15;
+
+    //    for (int i = 0; i < options.Length; i++)
+    //    {
+    //        Console.SetCursorPosition(startX, startY + i);
+
+    //        if (i == _state.SelectedIndex && !_state.InOffers)
+    //        {
+    //            Console.ForegroundColor = ConsoleColor.Black;
+    //            Console.BackgroundColor = ConsoleColor.White;
+    //        }
+
+    //        Console.WriteLine(options[i]);
+    //        Console.ResetColor();
+    //    }
+    //}

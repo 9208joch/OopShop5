@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using _3.WebShop.Infrastructure.DbContext;
 
@@ -11,9 +12,11 @@ using _3.WebShop.Infrastructure.DbContext;
 namespace _3.WebShop.Infrastructure.Migrations
 {
     [DbContext(typeof(WebShopContext))]
-    partial class WebShopContextModelSnapshot : ModelSnapshot
+    [Migration("20260413200139_MakeCustomerIdNullable")]
+    partial class MakeCustomerIdNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,50 +24,6 @@ namespace _3.WebShop.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("_1.WebShop.Core.Entities.Category", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Categories");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Sweater"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Shorts"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "T-shirt"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Name = "Jeans"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Name = "Jacket"
-                        });
-                });
 
             modelBuilder.Entity("_1.WebShop.Core.Entities.Customer", b =>
                 {
@@ -120,53 +79,6 @@ namespace _3.WebShop.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Customers");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Address = "Storgatan 1",
-                            Age = 28,
-                            City = "Stockholm",
-                            Country = "Sverige",
-                            Email = "anna@mail.se",
-                            Gender = "Female",
-                            MaskedCreditCard = "1111",
-                            Name = "Anna Andersson",
-                            OtherContactInfo = "-",
-                            PreferredPaymentMethod = "Card",
-                            phone = "070-1234567"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Address = "Lilla Torget 5",
-                            Age = 45,
-                            City = "Göteborg",
-                            Country = "Sverige",
-                            Email = "erik@mail.se",
-                            Gender = "Male",
-                            MaskedCreditCard = "2222",
-                            Name = "Erik Karlsson",
-                            OtherContactInfo = "-",
-                            PreferredPaymentMethod = "Swish",
-                            phone = "073-9876543"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Address = "Trädgårdsgatan 12",
-                            Age = 32,
-                            City = "Malmö",
-                            Country = "Sverige",
-                            Email = "sara@mail.se",
-                            Gender = "Female",
-                            MaskedCreditCard = "3333",
-                            Name = "Sara Nilsson",
-                            OtherContactInfo = "-",
-                            PreferredPaymentMethod = "Swish",
-                            phone = "076-5554433"
-                        });
                 });
 
             modelBuilder.Entity("_1.WebShop.Core.Entities.Order", b =>
@@ -230,8 +142,9 @@ namespace _3.WebShop.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -256,13 +169,14 @@ namespace _3.WebShop.Infrastructure.Migrations
                     b.Property<int>("Size")
                         .HasColumnType("int");
 
+                    b.Property<int>("StockBalance")
+                        .HasColumnType("int");
+
                     b.Property<string>("Supplier")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
 
                     b.ToTable("Products", t =>
                         {
@@ -290,22 +204,6 @@ namespace _3.WebShop.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("_1.WebShop.Core.Entities.Product", b =>
-                {
-                    b.HasOne("_1.WebShop.Core.Entities.Category", "Category")
-                        .WithMany("Products")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-                });
-
-            modelBuilder.Entity("_1.WebShop.Core.Entities.Category", b =>
-                {
-                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("_1.WebShop.Core.Entities.Customer", b =>

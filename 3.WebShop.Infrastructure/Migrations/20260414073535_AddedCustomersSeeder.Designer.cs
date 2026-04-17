@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using _3.WebShop.Infrastructure.DbContext;
 
@@ -11,9 +12,11 @@ using _3.WebShop.Infrastructure.DbContext;
 namespace _3.WebShop.Infrastructure.Migrations
 {
     [DbContext(typeof(WebShopContext))]
-    partial class WebShopContextModelSnapshot : ModelSnapshot
+    [Migration("20260414073535_AddedCustomersSeeder")]
+    partial class AddedCustomersSeeder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,50 +24,6 @@ namespace _3.WebShop.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("_1.WebShop.Core.Entities.Category", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Categories");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Sweater"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Shorts"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "T-shirt"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Name = "Jeans"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Name = "Jacket"
-                        });
-                });
 
             modelBuilder.Entity("_1.WebShop.Core.Entities.Customer", b =>
                 {
@@ -180,7 +139,7 @@ namespace _3.WebShop.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CustomerId")
+                    b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("OrderDate")
@@ -230,8 +189,9 @@ namespace _3.WebShop.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -256,13 +216,14 @@ namespace _3.WebShop.Infrastructure.Migrations
                     b.Property<int>("Size")
                         .HasColumnType("int");
 
+                    b.Property<int>("StockBalance")
+                        .HasColumnType("int");
+
                     b.Property<string>("Supplier")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
 
                     b.ToTable("Products", t =>
                         {
@@ -274,7 +235,9 @@ namespace _3.WebShop.Infrastructure.Migrations
                 {
                     b.HasOne("_1.WebShop.Core.Entities.Customer", null)
                         .WithMany("Orders")
-                        .HasForeignKey("CustomerId");
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("_1.WebShop.Core.Entities.OrderRow", b =>
@@ -290,22 +253,6 @@ namespace _3.WebShop.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("_1.WebShop.Core.Entities.Product", b =>
-                {
-                    b.HasOne("_1.WebShop.Core.Entities.Category", "Category")
-                        .WithMany("Products")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-                });
-
-            modelBuilder.Entity("_1.WebShop.Core.Entities.Category", b =>
-                {
-                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("_1.WebShop.Core.Entities.Customer", b =>

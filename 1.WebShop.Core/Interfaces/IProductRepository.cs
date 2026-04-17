@@ -8,11 +8,11 @@ namespace _1.WebShop.Core.Interfaces
     public interface IProductRepository
     {
         Task<List<Product>> GetAllAsync();
-        Task<Product> GetByIdAsync(int id);
+        Task<Product> GetProductByIdAsync(int id);
 
         Task AddAsync(Product product);
-        Task UpdateAsync(Product product);
-        Task DeleteAsync(int id);
+        Task UpdateProductAsync(Product product);
+        Task DeleteProductAsync(int id);
         Task AddProductAsync(Product newProduct);
     }
 }
